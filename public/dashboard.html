@@ -200,53 +200,66 @@ fetch("https://mybeercontroller.onrender.com/data")
 .then(res => res.json())
 .then(data => {
 
-if (!rows || rows.length === 0) return;
+if (!data || !data.history || !data.last) {
+console.log("Dados inválidos:", data);
+return;
+}
 
-let last = rows[0];
+let last = data.last;
 
 // CARDS
-function format1(v){ return (v !== null) ? parseFloat(v).toFixed(1) : "--"; }
-function format0(v){ return (v !== null) ? parseFloat(v).toFixed(0) : "--"; }
+function format1(v){ return (v !== null && v !== undefined) ? parseFloat(v).toFixed(1) : "--"; }
+function format0(v){ return (v !== null && v !== undefined) ? parseFloat(v).toFixed(0) : "--"; }
 
-// 🔥 STATUS TEXTO
-let status = last.status_control;
+// STATUS
+let status = last.status_control || "--";
 
 let el = document.getElementById("status_control");
 el.innerText = status;
 
+// estilo status
 if (status === "REFRIGERANDO") {
 el.style.fontSize = "18px";
+el.style.color = "#00bfff";
+} else if (status === "AQUECENDO") {
+el.style.fontSize = "18px";
+el.style.color = "#ff4d4d";
 } else {
-el.style.fontSize = "22px"; // padrao
+el.style.fontSize = "22px";
+el.style.color = "#ccc";
 }
-// cores automaticas
-if (status === "REFRIGERANDO") el.style.color = "#00bfff";
-else if (status === "AQUECENDO") el.style.color = "#ff4d4d";
-else el.style.color = "#ccc";
 
-document.getElementById("setpoint").innerText = format1(data.last.setpoint) + " °C";
-document.getElementById("temp_in").innerText = format1(data.last.temperature_in) + " °C";
-document.getElementById("temp_out").innerText = format1(data.last.temperature_out) + " °C";
-document.getElementById("hysterese").innerText = format1(data.last.hysterese) + " °C";
-document.getElementById("timedelay").innerText = format0(data.last.timedelay) + " s";
-document.getElementById("ontime").innerText = format0(data.last.ontime) + " s";
-document.getElementById("offtime").innerText = format0(data.last.offtime) + " s";
+// cards
+document.getElementById("setpoint").innerText = format1(last.setpoint) + " °C";
+document.getElementById("temp_in").innerText = format1(last.temperature_in) + " °C";
+document.getElementById("temp_out").innerText = format1(last.temperature_out) + " °C";
+document.getElementById("hysterese").innerText = format1(last.hysterese) + " °C";
+document.getElementById("timedelay").innerText = format0(last.timedelay) + " s";
+document.getElementById("ontime").innerText = format0(last.ontime) + " s";
+document.getElementById("offtime").innerText = format0(last.offtime) + " s";
 
+// gráfico
 drawChart(data.history);
+
+})
+.catch(err => {
+console.log("Erro fetch:", err);
 });
 }
 
 function drawChart(rows) {
 
+if (!rows || rows.length === 0) return;
+
 var data = new google.visualization.DataTable();
 data.addColumn('string', 'Hora');
-data.addColumn('number', 'Temp Interna');
 data.addColumn('number', 'Temp Externa');
+data.addColumn('number', 'Temp Interna');
 data.addColumn('number', 'Setpoint');
 data.addColumn('number', 'Limite Superior');
 data.addColumn('number', 'Limite Inferior');
 
-// 🔥 pegar histerese atual (do card)
+// histerese
 let hystText = document.getElementById("hysterese").innerText;
 let hyst = parseFloat(hystText) || 0;
 
@@ -274,39 +287,19 @@ lim_inf
 
 data.addRows(newRows);
 
-var minTemp = Infinity;
-var maxTemp = -Infinity;
-
-for (var i = 0; i < data.getNumberOfRows(); i++) {
-
-var t1 = data.getValue(i, 1);
-var t2 = data.getValue(i, 2);
-var t3 = data.getValue(i, 4); // limite sup
-var t4 = data.getValue(i, 5); // limite inf
-
-if (t1 < minTemp) minTemp = t1;
-if (t2 < minTemp) minTemp = t2;
-if (t3 < minTemp) minTemp = t3;
-if (t4 < minTemp) minTemp = t4;
-
-if (t1 > maxTemp) maxTemp = t1;
-if (t2 > maxTemp) maxTemp = t2;
-if (t3 > maxTemp) maxTemp = t3;
-if (t4 > maxTemp) maxTemp = t4;
-}
-
-minTemp = Math.floor(minTemp - 1);
-maxTemp = Math.ceil(maxTemp + 1);
+// range seguro
+let minTemp = Math.min(...newRows.flat().filter(v => typeof v === "number"));
+let maxTemp = Math.max(...newRows.flat().filter(v => typeof v === "number"));
 
 var options = {
 legend: 'right',
 
 series: {
-0: { lineWidth: 1}, // temp externa
-1: { lineWidth: 2, lineDashStyle: [4,4] }, // temp interna
-2: { lineWidth: 2 }, // setpoint
-3: { lineDashStyle: [4,4], color: '#999', visibleInLegend: false }, // lim sup
-4: { lineDashStyle: [4,4], color: '#999', visibleInLegend: false } // lim inf
+0: { lineWidth: 1},
+1: { lineWidth: 2, lineDashStyle: [4,4] },
+2: { lineWidth: 2 },
+3: { lineDashStyle: [4,4], color: '#999', visibleInLegend: false },
+4: { lineDashStyle: [4,4], color: '#999', visibleInLegend: false }
 },
 
 hAxis: {
@@ -319,8 +312,8 @@ textStyle: {fontSize: 10}
 vAxis: {
 title: 'Temperatura (°C)',
 viewWindow: {
-min: minTemp,
-max: maxTemp
+min: minTemp - 1,
+max: maxTemp + 1
 }
 },
 
