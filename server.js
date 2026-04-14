@@ -1,7 +1,8 @@
 const express = require('express');
 const { Pool } = require('pg');
 const path = require('path');
-
+const cors = require('cors');
+app.use(cors());
 const app = express();
 
 // 🔓 liberar arquivos estáticos (dashboard)
