@@ -72,6 +72,17 @@ body {
     text-align: justify;
 }
 
+.info-text h1 {
+    font-size: 17px;
+    text-align: center;
+    margin-bottom: 14px;
+}
+
+.info-text p {
+    font-size: 16px;
+    line-height: 1.2;
+}
+
 #footer {
     margin-top: 30px;
     font-size: 12px;
@@ -81,8 +92,6 @@ body {
 /* 🔥 LOADING */
 #loading {
     position: fixed;
-    top: 0;
-    left: 0;
     width: 100%;
     height: 100%;
     background: #111;
@@ -136,14 +145,19 @@ body {
 <div id="chart_div"></div>
 
 <div class="info-section">
-    <img src="http://mybeercontroller.rf.gd/cat.jpg">
+
+    <img src="http://mybeercontroller.rf.gd/cat.jpg" alt="MyBeerController">
+
     <div class="info-text">
         <h1><b>Controle de temperatura de fermentacao!</b></h1>
         <p>
-        Dados coletados por Arduino e enviados para nuvem via Wi-Fi.
-        Monitoramento remoto em tempo real 🍺
+        Os dados apresentados no grafico acima foram coletados por um sistema baseado em Arduino,
+        instalado em uma geladeira fermentadora e conectado a internet via Wi-Fi. As medicoes realizadas
+        sao transmitidas automaticamente para um servidor, onde sao armazenadas em um banco de dados
+        <b>MySQL</b> por meio de scripts em <b>PHP</b>, permitindo o monitoramento remoto e continuo do processo.
         </p>
     </div>
+
 </div>
 
 <div id="footer">
@@ -161,12 +175,21 @@ function atualizarTudo() {
 
     fetch("https://mybeercontroller.onrender.com/data")
     .then(res => res.json())
-    .then(data => {
+    .then(rows => {
 
-        function format1(v){ return (v !== null) ? parseFloat(v).toFixed(1) : "--"; }
-        function format0(v){ return (v !== null) ? parseFloat(v).toFixed(0) : "--"; }
+        if (!rows || rows.length === 0) return;
 
-        let status = data.last?.status_control ?? "--";
+        let last = rows[0];
+
+        function format1(v){ return (v != null) ? parseFloat(v).toFixed(1) : "--"; }
+        function format0(v){ return (v != null) ? parseFloat(v).toFixed(0) : "--"; }
+
+        // 🔥 STATUS TEXTO
+        let status = last.status_control;
+
+        if (status === "1") status = "REFRIGERANDO";
+        else if (status === "2") status = "AQUECENDO";
+        else if (status === "0") status = "PARADO";
 
         let el = document.getElementById("status_control");
         el.innerText = status;
@@ -175,26 +198,22 @@ function atualizarTudo() {
         else if (status === "AQUECENDO") el.style.color = "#ff4d4d";
         else el.style.color = "#ccc";
 
-        document.getElementById("setpoint").innerText = format1(data.last?.setpoint) + " °C";
-        document.getElementById("temp_in").innerText = format1(data.last?.temperature_in) + " °C";
-        document.getElementById("temp_out").innerText = format1(data.last?.temperature_out) + " °C";
-        document.getElementById("hysterese").innerText = format1(data.last?.hysterese) + " °C";
-        document.getElementById("timedelay").innerText = format0(data.last?.timedelay) + " s";
-        document.getElementById("ontime").innerText = format0(data.last?.ontime) + " s";
-        document.getElementById("offtime").innerText = format0(data.last?.offtime) + " s";
-        
-        drawChart(data.history || []);
+        document.getElementById("setpoint").innerText = format1(last.setpoint) + " °C";
+        document.getElementById("temp_in").innerText = format1(last.temperature_in) + " °C";
+        document.getElementById("temp_out").innerText = format1(last.temperature_out) + " °C";
+        document.getElementById("hysterese").innerText = format1(last.hysterese) + " °C";
+        document.getElementById("timedelay").innerText = format0(last.timedelay) + " s";
+        document.getElementById("ontime").innerText = format0(last.ontime) + " s";
+        document.getElementById("offtime").innerText = format0(last.offtime) + " s";
 
-        // 🔥 remove loading na primeira carga
+        drawChart(rows);
+
         if (primeiraCarga) {
             document.getElementById("loading").style.display = "none";
             primeiraCarga = false;
         }
     })
-    .catch(err => {
-        console.log("Erro:", err);
-
-        // 🔥 mensagem se Render estiver dormindo
+    .catch(() => {
         document.getElementById("loading").innerHTML = `
             <div class="spinner"></div>
             <div>Servidor iniciando... aguarde ⏳</div>
@@ -206,8 +225,8 @@ function drawChart(rows) {
 
     var data = new google.visualization.DataTable();
     data.addColumn('string', 'Hora');
-    data.addColumn('number', 'Temp Externa');
     data.addColumn('number', 'Temp Interna');
+    data.addColumn('number', 'Temp Externa');
     data.addColumn('number', 'Setpoint');
     data.addColumn('number', 'Limite Superior');
     data.addColumn('number', 'Limite Inferior');
@@ -220,7 +239,7 @@ function drawChart(rows) {
 
         let r = rows[i];
 
-        let hora = r.time ? r.time.substring(0,5) : "--";
+        let hora = r.time.substring(0,5);
         let temp_out = parseFloat(r.temperature_out);
         let temp_in = parseFloat(r.temperature_in);
         let setpoint = parseFloat(r.setpoint);
@@ -230,8 +249,8 @@ function drawChart(rows) {
 
         newRows.push([
             hora,
-            temp_out,
             temp_in,
+            temp_out,
             setpoint,
             lim_sup,
             lim_inf
@@ -240,8 +259,23 @@ function drawChart(rows) {
 
     data.addRows(newRows);
 
+    var options = {
+        legend: 'right',
+        series: {
+            0: { lineWidth: 2, lineDashStyle: [4,4] },
+            1: { lineWidth: 1 },
+            2: { lineWidth: 2 },
+            3: { lineDashStyle: [4,4], color: '#999', visibleInLegend: false },
+            4: { lineDashStyle: [4,4], color: '#999', visibleInLegend: false }
+        },
+        hAxis: { slantedText: true, slantedTextAngle: 90, textStyle: {fontSize: 10} },
+        vAxis: { title: 'Temperatura (°C)' },
+        backgroundColor: '#ffffff',
+        chartArea:{left:'8%',top:'10%',width:'75%',height:'70%'}
+    };
+
     var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-    chart.draw(data, { legend: 'right' });
+    chart.draw(data, options);
 }
 
 google.charts.setOnLoadCallback(() => {
