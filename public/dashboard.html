@@ -198,7 +198,7 @@ google.charts.load('current', {packages: ['corechart', 'line']});
 
 function atualizarTudo() {
 
-    fetch("status.php")
+    fetch("https://mybeercontroller.onrender.com/data")
     .then(res => res.json())
     .then(data => {
 
