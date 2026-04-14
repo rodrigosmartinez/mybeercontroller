@@ -77,10 +77,46 @@ body {
     font-size: 12px;
     color: #aaa;
 }
+
+/* 🔥 LOADING */
+#loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    z-index: 9999;
+}
+
+.spinner {
+    border: 6px solid #333;
+    border-top: 6px solid #00bfff;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
 </style>
 
 </head>
 <body>
+
+<!-- 🔥 LOADING -->
+<div id="loading">
+    <div class="spinner"></div>
+    <div>Conectando ao servidor...</div>
+</div>
 
 <h1>🍺 MyBeerController</h1>
     
@@ -119,6 +155,8 @@ body {
 <script>
 google.charts.load('current', {packages: ['corechart', 'line']});
 
+let primeiraCarga = true;
+
 function atualizarTudo() {
 
     fetch("https://mybeercontroller.onrender.com/data")
@@ -128,7 +166,7 @@ function atualizarTudo() {
         function format1(v){ return (v !== null) ? parseFloat(v).toFixed(1) : "--"; }
         function format0(v){ return (v !== null) ? parseFloat(v).toFixed(0) : "--"; }
 
-        let status = data.last.status_control ?? "--";
+        let status = data.last?.status_control ?? "--";
 
         let el = document.getElementById("status_control");
         el.innerText = status;
@@ -137,15 +175,30 @@ function atualizarTudo() {
         else if (status === "AQUECENDO") el.style.color = "#ff4d4d";
         else el.style.color = "#ccc";
 
-        document.getElementById("setpoint").innerText = format1(data.last.setpoint) + " °C";
-        document.getElementById("temp_in").innerText = format1(data.last.temperature_in) + " °C";
-        document.getElementById("temp_out").innerText = format1(data.last.temperature_out) + " °C";
-        document.getElementById("hysterese").innerText = format1(data.last.hysterese) + " °C";
-        document.getElementById("timedelay").innerText = format0(data.last.timedelay) + " s";
-        document.getElementById("ontime").innerText = format0(data.last.ontime) + " s";
-        document.getElementById("offtime").innerText = format0(data.last.offtime) + " s";
+        document.getElementById("setpoint").innerText = format1(data.last?.setpoint) + " °C";
+        document.getElementById("temp_in").innerText = format1(data.last?.temperature_in) + " °C";
+        document.getElementById("temp_out").innerText = format1(data.last?.temperature_out) + " °C";
+        document.getElementById("hysterese").innerText = format1(data.last?.hysterese) + " °C";
+        document.getElementById("timedelay").innerText = format0(data.last?.timedelay) + " s";
+        document.getElementById("ontime").innerText = format0(data.last?.ontime) + " s";
+        document.getElementById("offtime").innerText = format0(data.last?.offtime) + " s";
         
-        drawChart(data.history);
+        drawChart(data.history || []);
+
+        // 🔥 remove loading na primeira carga
+        if (primeiraCarga) {
+            document.getElementById("loading").style.display = "none";
+            primeiraCarga = false;
+        }
+    })
+    .catch(err => {
+        console.log("Erro:", err);
+
+        // 🔥 mensagem se Render estiver dormindo
+        document.getElementById("loading").innerHTML = `
+            <div class="spinner"></div>
+            <div>Servidor iniciando... aguarde ⏳</div>
+        `;
     });
 }
 
@@ -167,7 +220,7 @@ function drawChart(rows) {
 
         let r = rows[i];
 
-        let hora = r.time.substring(0,5);
+        let hora = r.time ? r.time.substring(0,5) : "--";
         let temp_out = parseFloat(r.temperature_out);
         let temp_in = parseFloat(r.temperature_in);
         let setpoint = parseFloat(r.setpoint);
@@ -191,8 +244,10 @@ function drawChart(rows) {
     chart.draw(data, { legend: 'right' });
 }
 
-google.charts.setOnLoadCallback(atualizarTudo);
-setInterval(atualizarTudo, 3000);
+google.charts.setOnLoadCallback(() => {
+    atualizarTudo();
+    setInterval(atualizarTudo, 3000);
+});
 </script>
 
 </body>
