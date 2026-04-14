@@ -1,7 +1,11 @@
 const express = require('express');
 const { Pool } = require('pg');
+const path = require('path');
 
 const app = express();
+
+// 🔓 liberar arquivos estáticos (dashboard)
+app.use(express.static('public'));
 
 // 🔌 conexão com banco
 const pool = new Pool({
@@ -9,7 +13,7 @@ const pool = new Pool({
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
 });
 
-// 🧱 criar tabela
+// 🧱 criar tabela automaticamente
 async function criarTabela() {
   try {
     await pool.query(`
@@ -34,12 +38,11 @@ async function criarTabela() {
   }
 }
 
-// chama ao iniciar
 criarTabela();
 
-// 🌐 rota teste
+// 🌐 rota principal → abre dashboard
 app.get('/', (req, res) => {
-  res.send("API online 🍺");
+  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
 // 📡 receber dados do ESP
@@ -83,18 +86,24 @@ app.get('/send-data', async (req, res) => {
     res.send("OK");
   } catch (err) {
     console.error("❌ ERRO AO SALVAR:", err);
-    res.status(500).send(err.message); // 🔥 mostra erro real
+    res.status(500).send(err.message);
   }
 });
 
-// 📊 buscar dados
+// 📊 buscar dados (para dashboard)
 app.get('/data', async (req, res) => {
   try {
     const result = await pool.query(
       'SELECT * FROM temp_data_db ORDER BY id DESC LIMIT 500'
     );
 
-    res.json(result.rows);
+    const rows = result.rows;
+
+    res.json({
+      last: rows[0] || {},
+      history: rows
+    });
+
   } catch (err) {
     console.error("❌ ERRO AO BUSCAR:", err);
     res.status(500).send(err.message);
