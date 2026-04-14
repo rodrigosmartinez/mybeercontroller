@@ -3,42 +3,46 @@ const { Pool } = require('pg');
 
 const app = express();
 
-// 🔌 conexão com banco (Render usa DATABASE_URL)
+// 🔌 conexão com banco
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
 });
 
-// 🧱 cria tabela automaticamente
+// 🧱 criar tabela
 async function criarTabela() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS temp_data_db (
-      id SERIAL PRIMARY KEY,
-      date DATE NOT NULL,
-      time TIME NOT NULL,
-      status_control TEXT NOT NULL,
-      setpoint FLOAT NOT NULL,
-      temperature_in FLOAT NOT NULL,
-      temperature_out FLOAT NOT NULL,
-      hysterese FLOAT NOT NULL,
-      timedelay FLOAT NOT NULL,
-      ontime FLOAT NOT NULL,
-      offtime FLOAT NOT NULL
-    );
-  `);
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS temp_data_db (
+        id SERIAL PRIMARY KEY,
+        date DATE NOT NULL,
+        time TIME NOT NULL,
+        status_control TEXT NOT NULL,
+        setpoint FLOAT NOT NULL,
+        temperature_in FLOAT NOT NULL,
+        temperature_out FLOAT NOT NULL,
+        hysterese FLOAT NOT NULL,
+        timedelay FLOAT NOT NULL,
+        ontime FLOAT NOT NULL,
+        offtime FLOAT NOT NULL
+      );
+    `);
+
+    console.log("✅ Tabela verificada/criada com sucesso");
+  } catch (err) {
+    console.error("❌ Erro ao criar tabela:", err);
+  }
 }
 
-// chama criação da tabela
-criarTabela().catch(console.error);
+// chama ao iniciar
+criarTabela();
 
 // 🌐 rota teste
 app.get('/', (req, res) => {
   res.send("API online 🍺");
 });
 
-// 📡 ESP envia dados
+// 📡 receber dados do ESP
 app.get('/send-data', async (req, res) => {
   try {
     const now = new Date();
@@ -65,23 +69,25 @@ app.get('/send-data', async (req, res) => {
       date,
       time,
       status_control,
-      setpoint,
-      temperature_in,
-      temperature_out,
-      hysterese,
-      timedelay,
-      ontime,
-      offtime
+      parseFloat(setpoint),
+      parseFloat(temperature_in),
+      parseFloat(temperature_out),
+      parseFloat(hysterese),
+      parseFloat(timedelay),
+      parseFloat(ontime),
+      parseFloat(offtime)
     ]);
+
+    console.log("📥 Dados inseridos com sucesso");
 
     res.send("OK");
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Erro ao salvar");
+    console.error("❌ ERRO AO SALVAR:", err);
+    res.status(500).send(err.message); // 🔥 mostra erro real
   }
 });
 
-// 📊 dashboard busca dados
+// 📊 buscar dados
 app.get('/data', async (req, res) => {
   try {
     const result = await pool.query(
@@ -90,13 +96,13 @@ app.get('/data', async (req, res) => {
 
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Erro ao buscar dados");
+    console.error("❌ ERRO AO BUSCAR:", err);
+    res.status(500).send(err.message);
   }
 });
 
 // 🚀 iniciar servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log("Servidor rodando na porta " + PORT);
+  console.log("🚀 Servidor rodando na porta " + PORT);
 });
