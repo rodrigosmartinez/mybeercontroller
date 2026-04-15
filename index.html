@@ -70,50 +70,40 @@
     google.charts.setOnLoadCallback(iniciarMonitoramento);
 
     function iniciarMonitoramento() {
-        // Escuta a pasta "historico" em tempo real
         db.ref('historico').limitToLast(50).on('value', snapshot => {
             const data = snapshot.val();
             if (!data) return;
-
-            // Converte o objeto do Firebase em array para o gráfico
-            const historyArray = Object.keys(data).map(key => {
-                const item = data[key];
-                const date = new Date(item.timestamp);
-                const horaStr = date.getHours() + ":" + String(date.getMinutes()).padStart(2, '0');
-                return [
-                    horaStr,
-                    item.status_control,
-                    item.temperature_out,
-                    item.temperature_in,
-                    item.setpoint,
-                    item.hysterese,
-                    item.timedelay,
-                    item.ontime,
-                    item.offtime
-                ];
-            });
-
-            const lastEntry = historyArray[historyArray.length - 1];
-            atualizarCards(lastEntry);
+    
+            // Transforma o objeto do Firebase em uma lista
+            const keys = Object.keys(data);
+            const historyArray = keys.map(key => data[key]);
+    
+            // Pega o ÚLTIMO registro para os cards
+            const lastEntry = data[keys[keys.length - 1]];
+            
+            atualizarCards(lastEntry); // Passa o objeto completo
             drawChart(historyArray);
         });
     }
 
     function atualizarCards(last) {
-        const format1 = (v) => v !== undefined ? parseFloat(v).toFixed(1) : "--";
+        const format1 = (v) => (v !== undefined && v !== null) ? parseFloat(v).toFixed(1) : "--";
+        const format0 = (v) => (v !== undefined && v !== null) ? parseFloat(v).toFixed(0) : "--";
         
-        let status = last[5] == 1 ? "REFRIGERANDO" : "STANDBY"; // Exemplo de lógica
+        // Status com cores automáticas
+        let status = last.status_control == 1 ? "REFRIGERANDO" : "STANDBY";
         let el = document.getElementById("status_control");
         el.innerText = status;
-        el.style.color = status === "REFRIGERANDO" ? "#00bfff" : "#ccc";
-
-        document.getElementById("setpoint").innerText = format1(last[2]) + " °C";
-        document.getElementById("temp_in").innerText = format1(last[3]) + " °C";
-        document.getElementById("temp_out").innerText = format1(last[4]) + " °C";
-        document.getElementById("hysterese").innerText = format1(last[5]) + " °C";
-        document.getElementById("timedelay").innerText = last[6] + " s";
-        document.getElementById("ontime").innerText = last[7] + " s";
-        document.getElementById("offtime").innerText = last[8] + " s";
+        el.style.color = (status === "REFRIGERANDO") ? "#00bfff" : "#ccc";
+    
+        // Preenchimento dos cards usando as chaves exatas do seu Firebase
+        document.getElementById("setpoint").innerText = format1(last.setpoint) + " °C";
+        document.getElementById("temp_in").innerText = format1(last.temperature_in) + " °C";
+        document.getElementById("temp_out").innerText = format1(last.temperature_out) + " °C";
+        document.getElementById("hysterese").innerText = format1(last.hysterese) + " °C";
+        document.getElementById("timedelay").innerText = format0(last.timedelay) + " s";
+        document.getElementById("ontime").innerText = format0(last.ontime) + " s";
+        document.getElementById("offtime").innerText = format0(last.offtime) + " s";
     }
 
     function drawChart(rows) {
