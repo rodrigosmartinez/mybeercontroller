@@ -2,38 +2,171 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>MyBeerController - Firebase</title>
-    <!-- Incluindo o SDK do Firebase via CDN -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug MyBeer</title>
+
+    <!-- 1. BIBLIOTECAS FIREBASE (VERSÃO COMPATIBILIDADE) -->
     <script src="https://gstatic.com"></script>
     <script src="https://gstatic.com"></script>
-    <script src="https://www.gstatic.com/charts/loader.js"></script>
+    
+    <!-- 2. GOOGLE CHARTS -->
+    <script src="https://gstatic.com"></script>
 
     <style>
-        /* Mantenha todo o seu CSS original aqui */
-        body { font-family: Arial; background: #111; color: white; text-align: center; }
-        .container { width: 1000px; margin: auto; }
-        .cards { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
-        .card { background: #222; padding: 15px; border-radius: 10px; width: 150px; }
-        .card div:first-child { font-size: 12px; color: #bbb; }
-        .value { font-size: 18px; font-weight: bold; }
-        #chart_div { height: 400px; background: #fff; border-radius: 15px; margin-bottom: 80px; overflow: hidden; }
-        .info-section { display: flex; align-items: flex-start; justify-content: center; gap: 30px; margin-top: 20px; color: white; }
-        .info-section img { width: 700px; border-radius: 10px; }
-        .info-text { max-width: 400px; text-align: justify; }
-        #footer { margin-top: 30px; font-size: 12px; color: #aaa; }
+        body { font-family: Arial, sans-serif; background: #111; color: white; text-align: center; margin: 0; padding: 10px; }
+        
+        /* CAIXA DE DEBUG (PARA VOCÊ VER O ERRO NO CELULAR) */
+        #debug-console {
+            background: #330000; border: 1px solid red; color: #ffcccc; 
+            padding: 10px; margin-bottom: 20px; font-family: monospace; 
+            font-size: 12px; text-align: left; min-height: 100px;
+        }
+
+        .cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .card { background: #222; padding: 15px; border-radius: 10px; width: 140px; }
+        .value { font-size: 18px; font-weight: bold; margin-top: 5px; }
+        .label { font-size: 12px; color: #bbb; }
+        #chart_div { background: #fff; height: 300px; border-radius: 10px; width: 100%; overflow: hidden; }
     </style>
 </head>
 <body>
 
-    <h1>🍺 MyBeerController</h1>
-    
-    <div class="container">
-        <!-- CARDS -->
-        <div class="cards">
-            <div class="card"><div>Status</div><div id="status_control" class="value">--</div></div>
-            <div class="card"><div>Setpoint</div><div id="setpoint" class="value">--</div></div>
-            <div class="card"><div>Temp. Interna</div><div id="temp_in" class="value">--</div></div>
-            <div class="card"><div>Temp. Externa</div><div id="temp_out" class="value">--</div></div>
+    <!-- ÁREA DE DIAGNÓSTICO -->
+    <div id="debug-console">Iniciando diagnóstico...<br></div>
+
+    <h1>🍺 MyBeer Monitor</h1>
+
+    <div class="cards">
+        <div class="card"><div class="label">Temp Interna</div><div id="temp_in" class="value">--</div></div>
+        <div class="card"><div class="label">Temp Externa</div><div id="temp_out" class="value">--</div></div>
+        <div class="card"><div class="label">Status</div><div id="status_control" class="value">--</div></div>
+        <div class="card"><div class="label">Última Leitura</div><div id="last_time" class="value">--:--</div></div>
+    </div>
+
+    <div id="chart_div"></div>
+
+<script>
+    // FUNÇÃO PARA ESCREVER NA TELA PRETA DE DEBUG
+    function log(msg) {
+        const d = document.getElementById('debug-console');
+        d.innerHTML += "> " + msg + "<br>";
+        console.log(msg);
+    }
+
+    // ==========================================================
+    // 1. COLE SUAS CONFIGURAÇÕES AQUI (CUIDADO COM AS ASPAS)
+    // ==========================================================
+    const firebaseConfig = {
+        apiKey: "SUA_API_KEY_AQUI",
+        authDomain: "://firebaseapp.com",
+        databaseURL: "https://firebaseio.com",
+        projectId: "meuprojetoiot-c9370",
+        storageBucket: "://appspot.com",
+        messagingSenderId: "SEU_MESSAGING_ID",
+        appId: "SEU_APP_ID"
+    };
+
+    try {
+        log("Inicializando Firebase...");
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        log("Firebase iniciado. Conectando ao banco...");
+
+        // Teste de conexão simples antes de carregar o gráfico
+        const connectedRef = db.ref(".info/connected");
+        connectedRef.on("value", (snap) => {
+            if (snap.val() === true) {
+                log("✅ CONECTADO AO SERVIDOR FIREBASE!");
+            } else {
+                log("⏳ Tentando conectar...");
+            }
+        });
+
+        // Carregamento do Google Charts
+        google.charts.load('current', {packages: ['corechart', 'line']});
+        google.charts.setOnLoadCallback(iniciarApp);
+
+    } catch (e) {
+        log("❌ ERRO FATAL NA INICIALIZAÇÃO: " + e.message);
+    }
+
+    function iniciarApp() {
+        log("Google Charts carregado. Buscando dados em '/historico'...");
+        
+        const historicoRef = firebase.database().ref('historico');
+        
+        // Ouve os dados (limite de 20 para ser rápido)
+        historicoRef.limitToLast(20).on('value', (snapshot) => {
+            try {
+                const data = snapshot.val();
+                
+                if (!data) {
+                    log("⚠️ A pasta 'historico' existe mas está vazia ou nula.");
+                    return;
+                }
+
+                log("📦 Dados recebidos! Processando...");
+                
+                const keys = Object.keys(data);
+                log("Total de registros encontrados: " + keys.length);
+
+                // Pega o último dado para os cards
+                const lastKey = keys[keys.length - 1];
+                const last = data[lastKey];
+                
+                // Atualiza Cards
+                document.getElementById("temp_in").innerText = (last.temperature_in ?? 0) + " °C";
+                document.getElementById("temp_out").innerText = (last.temperature_out ?? 0) + " °C";
+                document.getElementById("status_control").innerText = (last.status_control == 1) ? "LIGADO" : "DESLIGADO";
+                
+                if(last.timestamp) {
+                    let date = new Date(last.timestamp);
+                    document.getElementById("last_time").innerText = date.getHours() + ":" + String(date.getMinutes()).padStart(2, '0');
+                }
+
+                // Desenha Gráfico
+                drawChart(data);
+                log("✅ Gráfico e Cards atualizados com sucesso.");
+
+            } catch (innerError) {
+                log("❌ ERRO AO PROCESSAR DADOS: " + innerError.message);
+            }
+        }, (errorObject) => {
+            log("❌ FALHA DE PERMISSÃO/LEITURA: " + errorObject.code);
+            log("Verifique se as REGRAS do banco estão como true.");
+        });
+    }
+
+    function drawChart(data) {
+        var dataTable = new google.visualization.DataTable();
+        dataTable.addColumn('string', 'Hora');
+        dataTable.addColumn('number', 'Interna');
+        dataTable.addColumn('number', 'Externa');
+
+        const keys = Object.keys(data);
+        keys.forEach(k => {
+            let d = data[k];
+            let hora = "";
+            if(d.timestamp) {
+                let dt = new Date(d.timestamp);
+                hora = dt.getHours() + ":" + String(dt.getMinutes()).padStart(2, '0');
+            }
+            dataTable.addRow([hora, parseFloat(d.temperature_in), parseFloat(d.temperature_out)]);
+        });
+
+        var options = {
+            backgroundColor: '#fff',
+            legend: { position: 'bottom' },
+            chartArea: { width: '85%', height: '70%' }
+        };
+
+        var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+        chart.draw(dataTable, options);
+    }
+</script>
+
+</body>
+</html>
             <div class="card"><div>Histerese</div><div id="hysterese" class="value">--</div></div>
             <div class="card"><div>Delay</div><div id="timedelay" class="value">--</div></div>
             <div class="card"><div>On Time</div><div id="ontime" class="value">--</div></div>
