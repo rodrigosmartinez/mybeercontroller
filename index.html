@@ -82,11 +82,11 @@
                 const horaStr = date.getHours() + ":" + String(date.getMinutes()).padStart(2, '0');
                 return [
                     horaStr,
+                    item.status_control,
                     item.temperature_out,
                     item.temperature_in,
                     item.setpoint,
                     item.hysterese,
-                    item.status_control,
                     item.timedelay,
                     item.ontime,
                     item.offtime
@@ -107,10 +107,10 @@
         el.innerText = status;
         el.style.color = status === "REFRIGERANDO" ? "#00bfff" : "#ccc";
 
-        document.getElementById("setpoint").innerText = format1(last[3]) + " °C";
-        document.getElementById("temp_in").innerText = format1(last[2]) + " °C";
-        document.getElementById("temp_out").innerText = format1(last[1]) + " °C";
-        document.getElementById("hysterese").innerText = format1(last[4]) + " °C";
+        document.getElementById("setpoint").innerText = format1(last[2]) + " °C";
+        document.getElementById("temp_in").innerText = format1(last[3]) + " °C";
+        document.getElementById("temp_out").innerText = format1(last[4]) + " °C";
+        document.getElementById("hysterese").innerText = format1(last[5]) + " °C";
         document.getElementById("timedelay").innerText = last[6] + " s";
         document.getElementById("ontime").innerText = last[7] + " s";
         document.getElementById("offtime").innerText = last[8] + " s";
@@ -119,9 +119,9 @@
     function drawChart(rows) {
         var data = new google.visualization.DataTable();
         data.addColumn('string', 'Hora');
+        data.addColumn('number', 'Setpoint');
         data.addColumn('number', 'Temp Interna');
         data.addColumn('number', 'Temp Externa');
-        data.addColumn('number', 'Setpoint');
         data.addColumn('number', 'Limite Sup');
         data.addColumn('number', 'Limite Inf');
 
@@ -138,9 +138,9 @@
             curveType: 'function',
             legend: { position: 'bottom' },
             series: {
-                0: { color: '#e74c3c' }, // interna
-                1: { color: '#3498db' }, // externa
-                2: { color: '#2ecc71' }, // setpoint
+                0: { color: '#2ecc71' }, // setpoint
+                1: { color: '#e74c3c' }, // interna
+                2: { color: '#3498db' }, // externa
                 3: { lineDashStyle: [4, 4], color: '#999' },
                 4: { lineDashStyle: [4, 4], color: '#999' }
             }
