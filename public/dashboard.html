@@ -1,154 +1,333 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>MyBeerController - Firebase</title>
-    <!-- Incluindo o SDK do Firebase via CDN -->
-    <script src="https://gstatic.com"></script>
-    <script src="https://gstatic.com"></script>
-    <script src="https://www.gstatic.com/charts/loader.js"></script>
+<meta charset="UTF-8">
+<title>MyBeerController</title>
 
-    <style>
-        /* Mantenha todo o seu CSS original aqui */
-        body { font-family: Arial; background: #111; color: white; text-align: center; }
-        .container { width: 1000px; margin: auto; }
-        .cards { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
-        .card { background: #222; padding: 15px; border-radius: 10px; width: 150px; }
-        .card div:first-child { font-size: 12px; color: #bbb; }
-        .value { font-size: 18px; font-weight: bold; }
-        #chart_div { height: 400px; background: #fff; border-radius: 15px; margin-bottom: 80px; overflow: hidden; }
-        .info-section { display: flex; align-items: flex-start; justify-content: center; gap: 30px; margin-top: 20px; color: white; }
-        .info-section img { width: 700px; border-radius: 10px; }
-        .info-text { max-width: 400px; text-align: justify; }
-        #footer { margin-top: 30px; font-size: 12px; color: #aaa; }
-    </style>
+<link rel='icon' type='image/png' href='http://mybeercontroller.rf.gd/cat_sunglass.jpg'/>
+
+<script src="https://www.gstatic.com/charts/loader.js"></script>
+
+<style>
+body {
+font-family: Arial;
+background: #111;
+color: white;
+text-align: center;
+}
+
+.container {
+width: 1000px;
+margin: auto;
+}
+
+/* 👈 todos em uma linha */
+.cards {
+display: flex;
+justify-content: center;
+gap: 10px;
+margin-bottom: 20px;
+}
+
+/* 👈 4 por linha */
+/*.cards {
+display: grid;
+grid-template-columns: repeat(4, 1fr); 
+gap: 15px;
+margin-bottom: 20px;
+}*/
+
+.card {
+background: #222;
+padding: 15px;
+border-radius: 10px;
+width: 150px;
+}
+
+.card div:first-child {
+font-size: 12px;
+color: #bbb;
+}
+
+.value {
+font-size: 18px;
+font-weight: bold;
+}
+
+#chart_div {
+height: 400px;
+background: #fff;
+border-radius: 15px;
+margin-bottom: 80px;
+overflow: hidden;
+}
+
+/* 🔥 NOVA SECAO (imagem + texto) */
+.info-section {
+display: flex;
+align-items: flex-start;
+justify-content: center;
+gap: 30px;
+margin-top: 20px;
+color: white;
+}
+
+.info-section img {
+width: 700px;
+border-radius: 10px;
+}
+
+.info-text {
+max-width: 400px;
+text-align: justify;
+}
+
+.info-text h1 {
+font-size: 17px;
+text-align: center;
+margin-bottom: 14px;
+}
+
+.info-text p {
+font-size: 16px;
+text-align: justify;
+line-height: 1.2;
+}
+
+/* Footer */
+#footer {
+margin-top: 30px;
+font-size: 12px;
+color: #aaa;
+}
+
+#footer a {
+color: #aaa;
+text-decoration: none;
+}
+
+#footer .pipe {
+margin: 0 5px;
+}
+
+/* 🔥 LOADING */
+#loading {
+position: fixed;
+width: 100%;
+height: 100%;
+background: #111;
+display: flex;
+align-items: center;
+justify-content: center;
+flex-direction: column;
+z-index: 9999;
+}
+
+.spinner {
+border: 6px solid #333;
+border-top: 6px solid #00bfff;
+border-radius: 50%;
+width: 60px;
+height: 60px;
+animation: spin 1s linear infinite;
+margin-bottom: 15px;
+}
+
+@keyframes spin {
+0% { transform: rotate(0deg); }
+100% { transform: rotate(360deg); }
+}
+
+</style>
+
 </head>
 <body>
 
-    <h1>🍺 MyBeerController</h1>
-    
-    <div class="container">
-        <!-- CARDS -->
-        <div class="cards">
-            <div class="card"><div>Status</div><div id="status_control" class="value">--</div></div>
-            <div class="card"><div>Setpoint</div><div id="setpoint" class="value">--</div></div>
-            <div class="card"><div>Temp. Interna</div><div id="temp_in" class="value">--</div></div>
-            <div class="card"><div>Temp. Externa</div><div id="temp_out" class="value">--</div></div>
-            <div class="card"><div>Histerese</div><div id="hysterese" class="value">--</div></div>
-            <div class="card"><div>Delay</div><div id="timedelay" class="value">--</div></div>
-            <div class="card"><div>On Time</div><div id="ontime" class="value">--</div></div>
-            <div class="card"><div>Off Time</div><div id="offtime" class="value">--</div></div>
-        </div>
+<h1>🍺 MyBeerController</h1>
 
-        <div id="chart_div"></div>
+<div class="container">
 
-        <div class="info-section">
-            <img src="http://mybeercontroller.rf.gd/cat.jpg" alt="MyBeerController">
-            <div class="info-text">
-                <h1 style="text-align: center;">Controle de Fermentação</h1>
-                <p>Dados coletados via ESP8266 e Arduino Mega, armazenados no <b>Firebase Realtime Database</b>.</p>
-            </div>
-        </div>
-    </div>
+<!-- CARDS -->
+<div class="cards">
+<div class="card"><div>Status</div><div id="status_control" class="value">--</div></div>
+<div class="card"><div>Setpoint</div><div id="setpoint" class="value">--</div></div>
+<div class="card"><div>Temp. Interna</div><div id="temp_in" class="value">--</div></div>
+<div class="card"><div>Temp. Externa</div><div id="temp_out" class="value">--</div></div>
+<div class="card"><div>Histerese</div><div id="hysterese" class="value">--</div></div>
+<div class="card"><div>Delay</div><div id="timedelay" class="value">--</div></div>
+<div class="card"><div>On Time</div><div id="ontime" class="value">--</div></div>
+<div class="card"><div>Off Time</div><div id="offtime" class="value">--</div></div>
+</div>
+
+<!-- GRAFICO -->
+<div id="chart_div"></div>
+
+<!-- 🔥 NOVA SECAO -->
+<div class="info-section">
+
+<img src="http://mybeercontroller.rf.gd/cat.jpg" alt="MyBeerController">
+
+<div class="info-text">
+<h1 style="text-align: center;"><b>Controle de temperatura de fermentacao!</b></b></h1>
+<p>
+Os dados apresentados no grafico acima foram coletados por um sistema baseado em Arduino,
+instalado em uma geladeira fermentadora e conectado a internet via Wi-Fi. As medicoes realizadas
+sao transmitidas automaticamente para um servidor, onde sao armazenadas em um banco de dados
+<b>MySQL</b> por meio de scripts em <b>PHP</b>, permitindo o monitoramento remoto e continuo do processo.
+</p>
+</div>
+
+</div>
+
+<!-- FOOTER -->
+<div id="footer">
+<a href="http://mybeercontroller.rf.gd/" target="_blank">MyBeerController</a>
+<span class="pipe">|</span>
+<a href="http://mybeercontroller.rf.gd/auth" target="_blank">Client Area</a>
+<span class="pipe">|</span>
+<a href="http://www.facebook.com" target="_blank">Find MyBeerController on Facebook</a>
+<div style="margin-top:5px;">Copyright © MyBeerController 2026</div>
+</div>
+
+</div>
 
 <script>
-    // 1. CONFIGURAÇÃO DO FIREBASE (Copie do seu console)
-    const firebaseConfig = {
-        apiKey: "SUA_API_KEY",
-        authDomain: "://firebaseapp.com",
-        databaseURL: "https://firebaseio.com",
-        projectId: "meuprojetoiot-c9370",
-        storageBucket: "://appspot.com",
-        messagingSenderId: "SEU_ID",
-        appId: "SEU_APP_ID"
-    };
+google.charts.load('current', {packages: ['corechart', 'line']});
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+function atualizarTudo() {
 
-    google.charts.load('current', {packages: ['corechart', 'line']});
-    google.charts.setOnLoadCallback(iniciarMonitoramento);
+fetch("https://mybeercontroller.onrender.com/data")
+.then(res => res.json())
+.then(data => {
 
-    function iniciarMonitoramento() {
-        // Escuta a pasta "historico" em tempo real
-        db.ref('historico').limitToLast(50).on('value', snapshot => {
-            const data = snapshot.val();
-            if (!data) return;
+if (!data || !data.history || !data.last) {
+console.log("Dados inválidos:", data);
+return;
+}
 
-            // Converte o objeto do Firebase em array para o gráfico
-            const historyArray = Object.keys(data).map(key => {
-                const item = data[key];
-                const date = new Date(item.timestamp);
-                const horaStr = date.getHours() + ":" + String(date.getMinutes()).padStart(2, '0');
-                return [
-                    horaStr,
-                    item.temperature_out,
-                    item.temperature_in,
-                    item.setpoint,
-                    item.hysterese,
-                    item.status_control,
-                    item.timedelay,
-                    item.ontime,
-                    item.offtime
-                ];
-            });
+let last = data.last;
 
-            const lastEntry = historyArray[historyArray.length - 1];
-            atualizarCards(lastEntry);
-            drawChart(historyArray);
-        });
-    }
+// CARDS
+function format1(v){ return (v !== null && v !== undefined) ? parseFloat(v).toFixed(1) : "--"; }
+function format0(v){ return (v !== null && v !== undefined) ? parseFloat(v).toFixed(0) : "--"; }
 
-    function atualizarCards(last) {
-        const format1 = (v) => v !== undefined ? parseFloat(v).toFixed(1) : "--";
-        
-        let status = last[5] == 1 ? "REFRIGERANDO" : "STANDBY"; // Exemplo de lógica
-        let el = document.getElementById("status_control");
-        el.innerText = status;
-        el.style.color = status === "REFRIGERANDO" ? "#00bfff" : "#ccc";
+// STATUS
+let status = last.status_control || "--";
 
-        document.getElementById("setpoint").innerText = format1(last[3]) + " °C";
-        document.getElementById("temp_in").innerText = format1(last[2]) + " °C";
-        document.getElementById("temp_out").innerText = format1(last[1]) + " °C";
-        document.getElementById("hysterese").innerText = format1(last[4]) + " °C";
-        document.getElementById("timedelay").innerText = last[6] + " s";
-        document.getElementById("ontime").innerText = last[7] + " s";
-        document.getElementById("offtime").innerText = last[8] + " s";
-    }
+let el = document.getElementById("status_control");
+el.innerText = status;
 
-    function drawChart(rows) {
-        var data = new google.visualization.DataTable();
-        data.addColumn('string', 'Hora');
-        data.addColumn('number', 'Temp Interna');
-        data.addColumn('number', 'Temp Externa');
-        data.addColumn('number', 'Setpoint');
-        data.addColumn('number', 'Limite Sup');
-        data.addColumn('number', 'Limite Inf');
+// estilo status
+if (status === "REFRIGERANDO") {
+el.style.fontSize = "18px";
+el.style.color = "#00bfff";
+} else if (status === "AQUECENDO") {
+el.style.fontSize = "18px";
+el.style.color = "#ff4d4d";
+} else {
+el.style.fontSize = "22px";
+el.style.color = "#ccc";
+}
 
-        let newRows = rows.map(r => {
-            let setpoint = r[3];
-            let hyst = r[4];
-            return [r[0], r[2], r[1], setpoint, setpoint + (hyst/2), setpoint - (hyst/2)];
-        });
+// cards
+document.getElementById("setpoint").innerText = format1(last.setpoint) + " °C";
+document.getElementById("temp_in").innerText = format1(last.temperature_in) + " °C";
+document.getElementById("temp_out").innerText = format1(last.temperature_out) + " °C";
+document.getElementById("hysterese").innerText = format1(last.hysterese) + " °C";
+document.getElementById("timedelay").innerText = format0(last.timedelay) + " s";
+document.getElementById("ontime").innerText = format0(last.ontime) + " s";
+document.getElementById("offtime").innerText = format0(last.offtime) + " s";
 
-        data.addRows(newRows);
+// gráfico
+drawChart(data.history);
 
-        var options = {
-            backgroundColor: '#fff',
-            curveType: 'function',
-            legend: { position: 'bottom' },
-            series: {
-                0: { color: '#e74c3c' }, // interna
-                1: { color: '#3498db' }, // externa
-                2: { color: '#2ecc71' }, // setpoint
-                3: { lineDashStyle: [4, 4], color: '#999' },
-                4: { lineDashStyle: [4, 4], color: '#999' }
-            }
-        };
+})
+.catch(err => {
+console.log("Erro fetch:", err);
+});
+}
 
-        var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-        chart.draw(data, options);
-    }
+function drawChart(rows) {
+
+if (!rows || rows.length === 0) return;
+
+var data = new google.visualization.DataTable();
+data.addColumn('string', 'Hora');
+data.addColumn('number', 'Temp Externa');
+data.addColumn('number', 'Temp Interna');
+data.addColumn('number', 'Setpoint');
+data.addColumn('number', 'Limite Superior');
+data.addColumn('number', 'Limite Inferior');
+
+// histerese
+let hystText = document.getElementById("hysterese").innerText;
+let hyst = parseFloat(hystText) || 0;
+
+let newRows = [];
+
+for (let i = 0; i < rows.length; i++) {
+
+let hora = rows[i][0];
+let temp_out = rows[i][1];
+let temp_in = rows[i][2];
+let setpoint = rows[i][3];
+
+let lim_sup = setpoint + (hyst / 2);
+let lim_inf = setpoint - (hyst / 2);
+
+newRows.push([
+hora,
+temp_out,
+temp_in,
+setpoint,
+lim_sup,
+lim_inf
+]);
+}
+
+data.addRows(newRows);
+
+// range seguro
+let minTemp = Math.min(...newRows.flat().filter(v => typeof v === "number"));
+let maxTemp = Math.max(...newRows.flat().filter(v => typeof v === "number"));
+
+var options = {
+legend: 'right',
+
+series: {
+0: { lineWidth: 1},
+1: { lineWidth: 2, lineDashStyle: [4,4] },
+2: { lineWidth: 2 },
+3: { lineDashStyle: [4,4], color: '#999', visibleInLegend: false },
+4: { lineDashStyle: [4,4], color: '#999', visibleInLegend: false }
+},
+
+hAxis: {
+title: 'Hora',
+slantedText: true,
+slantedTextAngle: 90,
+textStyle: {fontSize: 10}
+},
+
+vAxis: {
+title: 'Temperatura (°C)',
+viewWindow: {
+min: minTemp - 1,
+max: maxTemp + 1
+}
+},
+
+backgroundColor: '#ffffff',
+chartArea:{left:'8%',top:'10%',width:'75%',height:'70%'}
+};
+
+var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+chart.draw(data, options);
+}
+
+google.charts.setOnLoadCallback(() => {
+atualizarTudo();
+setInterval(atualizarTudo, 3000);
+});
 </script>
-</body>
-</html>
+    
