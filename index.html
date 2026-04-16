@@ -1,40 +1,90 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Debug MyBeer</title>
+// 1. CONFIGURAÇÃO DO FIREBASE (Copie do seu console)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBcqFW9oxAxYNfzPpy01UC7XcCZi4rZR1Q",
+      authDomain: "meuprojetoiot-c9370.firebaseapp.com",
+      databaseURL: "https://meuprojetoiot-c9370-default-rtdb.firebaseio.com",
+      projectId: "meuprojetoiot-c9370",
+      storageBucket: "meuprojetoiot-c9370.firebasestorage.app",
+      messagingSenderId: "281502844111",
+      appId: "1:281502844111:web:d7e869de6c6ab007d863ba"
+    };
 
-    <!-- 1. BIBLIOTECAS FIREBASE (VERSÃO COMPATIBILIDADE) -->
-    <script src="https://gstatic.com"></script>
-    <script src="https://gstatic.com"></script>
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    google.charts.load('current', {packages: ['corechart', 'line']});
+    google.charts.setOnLoadCallback(iniciarMonitoramento);
+
+    function iniciarMonitoramento() {
+        db.ref('historico').limitToLast(50).on('value', snapshot => {
+            const data = snapshot.val();
+            if (!data) return;
     
-    <!-- 2. GOOGLE CHARTS -->
-    <script src="https://gstatic.com"></script>
+            // Transforma o objeto do Firebase em uma lista
+            const keys = Object.keys(data);
+            const historyArray = keys.map(key => data[key]);
+    
+            // Pega o ÚLTIMO registro para os cards
+            const lastEntry = data[keys[keys.length - 1]];
+            
+            atualizarCards(lastEntry); // Passa o objeto completo
+            drawChart(historyArray);
+        });
+    }
 
-    <style>
-        body { font-family: Arial, sans-serif; background: #111; color: white; text-align: center; margin: 0; padding: 10px; }
+    function atualizarCards(last) {
+        const format1 = (v) => (v !== undefined && v !== null) ? parseFloat(v).toFixed(1) : "--";
+        const format0 = (v) => (v !== undefined && v !== null) ? parseFloat(v).toFixed(0) : "--";
         
-        /* CAIXA DE DEBUG (PARA VOCÊ VER O ERRO NO CELULAR) */
-        #debug-console {
-            background: #330000; border: 1px solid red; color: #ffcccc; 
-            padding: 10px; margin-bottom: 20px; font-family: monospace; 
-            font-size: 12px; text-align: left; min-height: 100px;
-        }
+        // Status com cores automáticas
+        let status = last.status_control == 1 ? "REFRIGERANDO" : "STANDBY";
+        let el = document.getElementById("status_control");
+        el.innerText = status;
+        el.style.color = (status === "REFRIGERANDO") ? "#00bfff" : "#ccc";
+    
+        // Preenchimento dos cards usando as chaves exatas do seu Firebase
+        document.getElementById("setpoint").innerText = format1(last.setpoint) + " °C";
+        document.getElementById("temp_in").innerText = format1(last.temperature_in) + " °C";
+        document.getElementById("temp_out").innerText = format1(last.temperature_out) + " °C";
+        document.getElementById("hysterese").innerText = format1(last.hysterese) + " °C";
+        document.getElementById("timedelay").innerText = format0(last.timedelay) + " s";
+        document.getElementById("ontime").innerText = format0(last.ontime) + " s";
+        document.getElementById("offtime").innerText = format0(last.offtime) + " s";
+    }
 
-        .cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px; }
-        .card { background: #222; padding: 15px; border-radius: 10px; width: 140px; }
-        .value { font-size: 18px; font-weight: bold; margin-top: 5px; }
-        .label { font-size: 12px; color: #bbb; }
-        #chart_div { background: #fff; height: 300px; border-radius: 10px; width: 100%; overflow: hidden; }
-    </style>
-</head>
-<body>
+    function drawChart(rows) {
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Hora');
+        data.addColumn('number', 'Setpoint');
+        data.addColumn('number', 'Temp Interna');
+        data.addColumn('number', 'Temp Externa');
+        data.addColumn('number', 'Limite Sup');
+        data.addColumn('number', 'Limite Inf');
 
-    <!-- ÁREA DE DIAGNÓSTICO -->
-    <div id="debug-console">Iniciando diagnóstico...<br></div>
+        let newRows = rows.map(r => {
+            let setpoint = r[3];
+            let hyst = r[4];
+            return [r[0], r[2], r[1], setpoint, setpoint + (hyst/2), setpoint - (hyst/2)];
+        });
 
-    <h1>🍺 MyBeer Monitor</h1>
+        data.addRows(newRows);
+
+        var options = {
+            backgroundColor: '#fff',
+            curveType: 'function',
+            legend: { position: 'bottom' },
+            series: {
+                0: { color: '#2ecc71' }, // setpoint
+                1: { color: '#e74c3c' }, // interna
+                2: { color: '#3498db' }, // externa
+                3: { lineDashStyle: [4, 4], color: '#999' },
+                4: { lineDashStyle: [4, 4], color: '#999' }
+            }
+        };
+
+        var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+        chart.draw(data, options);
+    }    <h1>🍺 MyBeer Monitor</h1>
 
     <div class="cards">
         <div class="card"><div class="label">Temp Interna</div><div id="temp_in" class="value">--</div></div>
