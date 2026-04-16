@@ -1,222 +1,39 @@
-// 1. CONFIGURAÇÃO DO FIREBASE (Copie do seu console)
-    const firebaseConfig = {
-      apiKey: "AIzaSyBcqFW9oxAxYNfzPpy01UC7XcCZi4rZR1Q",
-      authDomain: "meuprojetoiot-c9370.firebaseapp.com",
-      databaseURL: "https://meuprojetoiot-c9370-default-rtdb.firebaseio.com",
-      projectId: "meuprojetoiot-c9370",
-      storageBucket: "meuprojetoiot-c9370.firebasestorage.app",
-      messagingSenderId: "281502844111",
-      appId: "1:281502844111:web:d7e869de6c6ab007d863ba"
-    };
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>MyBeerController - Firebase</title>
+    <!-- Incluindo o SDK do Firebase via CDN -->
+    <script src="https://gstatic.com"></script>
+    <script src="https://gstatic.com"></script>
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+    <style>
+        /* Mantenha todo o seu CSS original aqui */
+        body { font-family: Arial; background: #111; color: white; text-align: center; }
+        .container { width: 1000px; margin: auto; }
+        .cards { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .card { background: #222; padding: 15px; border-radius: 10px; width: 150px; }
+        .card div:first-child { font-size: 12px; color: #bbb; }
+        .value { font-size: 18px; font-weight: bold; }
+        #chart_div { height: 400px; background: #fff; border-radius: 15px; margin-bottom: 80px; overflow: hidden; }
+        .info-section { display: flex; align-items: flex-start; justify-content: center; gap: 30px; margin-top: 20px; color: white; }
+        .info-section img { width: 700px; border-radius: 10px; }
+        .info-text { max-width: 400px; text-align: justify; }
+        #footer { margin-top: 30px; font-size: 12px; color: #aaa; }
+    </style>
+</head>
+<body>
 
-    google.charts.load('current', {packages: ['corechart', 'line']});
-    google.charts.setOnLoadCallback(iniciarMonitoramento);
-
-    function iniciarMonitoramento() {
-        db.ref('historico').limitToLast(50).on('value', snapshot => {
-            const data = snapshot.val();
-            if (!data) return;
+    <h1>🍺 MyBeerController</h1>
     
-            // Transforma o objeto do Firebase em uma lista
-            const keys = Object.keys(data);
-            const historyArray = keys.map(key => data[key]);
-    
-            // Pega o ÚLTIMO registro para os cards
-            const lastEntry = data[keys[keys.length - 1]];
-            
-            atualizarCards(lastEntry); // Passa o objeto completo
-            drawChart(historyArray);
-        });
-    }
-
-    function atualizarCards(last) {
-        const format1 = (v) => (v !== undefined && v !== null) ? parseFloat(v).toFixed(1) : "--";
-        const format0 = (v) => (v !== undefined && v !== null) ? parseFloat(v).toFixed(0) : "--";
-        
-        // Status com cores automáticas
-        let status = last.status_control == 1 ? "REFRIGERANDO" : "STANDBY";
-        let el = document.getElementById("status_control");
-        el.innerText = status;
-        el.style.color = (status === "REFRIGERANDO") ? "#00bfff" : "#ccc";
-    
-        // Preenchimento dos cards usando as chaves exatas do seu Firebase
-        document.getElementById("setpoint").innerText = format1(last.setpoint) + " °C";
-        document.getElementById("temp_in").innerText = format1(last.temperature_in) + " °C";
-        document.getElementById("temp_out").innerText = format1(last.temperature_out) + " °C";
-        document.getElementById("hysterese").innerText = format1(last.hysterese) + " °C";
-        document.getElementById("timedelay").innerText = format0(last.timedelay) + " s";
-        document.getElementById("ontime").innerText = format0(last.ontime) + " s";
-        document.getElementById("offtime").innerText = format0(last.offtime) + " s";
-    }
-
-    function drawChart(rows) {
-        var data = new google.visualization.DataTable();
-        data.addColumn('string', 'Hora');
-        data.addColumn('number', 'Setpoint');
-        data.addColumn('number', 'Temp Interna');
-        data.addColumn('number', 'Temp Externa');
-        data.addColumn('number', 'Limite Sup');
-        data.addColumn('number', 'Limite Inf');
-
-        let newRows = rows.map(r => {
-            let setpoint = r[3];
-            let hyst = r[4];
-            return [r[0], r[2], r[1], setpoint, setpoint + (hyst/2), setpoint - (hyst/2)];
-        });
-
-        data.addRows(newRows);
-
-        var options = {
-            backgroundColor: '#fff',
-            curveType: 'function',
-            legend: { position: 'bottom' },
-            series: {
-                0: { color: '#2ecc71' }, // setpoint
-                1: { color: '#e74c3c' }, // interna
-                2: { color: '#3498db' }, // externa
-                3: { lineDashStyle: [4, 4], color: '#999' },
-                4: { lineDashStyle: [4, 4], color: '#999' }
-            }
-        };
-
-        var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-        chart.draw(data, options);
-    }    <h1>🍺 MyBeer Monitor</h1>
-
-    <div class="cards">
-        <div class="card"><div class="label">Temp Interna</div><div id="temp_in" class="value">--</div></div>
-        <div class="card"><div class="label">Temp Externa</div><div id="temp_out" class="value">--</div></div>
-        <div class="card"><div class="label">Status</div><div id="status_control" class="value">--</div></div>
-        <div class="card"><div class="label">Última Leitura</div><div id="last_time" class="value">--:--</div></div>
-    </div>
-
-    <div id="chart_div"></div>
-
-<script>
-    // FUNÇÃO PARA ESCREVER NA TELA PRETA DE DEBUG
-    function log(msg) {
-        const d = document.getElementById('debug-console');
-        d.innerHTML += "> " + msg + "<br>";
-        console.log(msg);
-    }
-
-    // ==========================================================
-    // 1. COLE SUAS CONFIGURAÇÕES AQUI (CUIDADO COM AS ASPAS)
-    // ==========================================================
-    const firebaseConfig = {
-      apiKey: "AIzaSyBcqFW9oxAxYNfzPpy01UC7XcCZi4rZR1Q",
-      authDomain: "meuprojetoiot-c9370.firebaseapp.com",
-      databaseURL: "https://meuprojetoiot-c9370-default-rtdb.firebaseio.com",
-      projectId: "meuprojetoiot-c9370",
-      storageBucket: "meuprojetoiot-c9370.firebasestorage.app",
-      messagingSenderId: "281502844111",
-      appId: "1:281502844111:web:d7e869de6c6ab007d863ba"
-    };
-
-    try {
-        log("Inicializando Firebase...");
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        log("Firebase iniciado. Conectando ao banco...");
-
-        // Teste de conexão simples antes de carregar o gráfico
-        const connectedRef = db.ref(".info/connected");
-        connectedRef.on("value", (snap) => {
-            if (snap.val() === true) {
-                log("✅ CONECTADO AO SERVIDOR FIREBASE!");
-            } else {
-                log("⏳ Tentando conectar...");
-            }
-        });
-
-        // Carregamento do Google Charts
-        google.charts.load('current', {packages: ['corechart', 'line']});
-        google.charts.setOnLoadCallback(iniciarApp);
-
-    } catch (e) {
-        log("❌ ERRO FATAL NA INICIALIZAÇÃO: " + e.message);
-    }
-
-    function iniciarApp() {
-        log("Google Charts carregado. Buscando dados em '/historico'...");
-        
-        const historicoRef = firebase.database().ref('historico');
-        
-        // Ouve os dados (limite de 20 para ser rápido)
-        historicoRef.limitToLast(20).on('value', (snapshot) => {
-            try {
-                const data = snapshot.val();
-                
-                if (!data) {
-                    log("⚠️ A pasta 'historico' existe mas está vazia ou nula.");
-                    return;
-                }
-
-                log("📦 Dados recebidos! Processando...");
-                
-                const keys = Object.keys(data);
-                log("Total de registros encontrados: " + keys.length);
-
-                // Pega o último dado para os cards
-                const lastKey = keys[keys.length - 1];
-                const last = data[lastKey];
-                
-                // Atualiza Cards
-                document.getElementById("temp_in").innerText = (last.temperature_in ?? 0) + " °C";
-                document.getElementById("temp_out").innerText = (last.temperature_out ?? 0) + " °C";
-                document.getElementById("status_control").innerText = (last.status_control == 1) ? "LIGADO" : "DESLIGADO";
-                
-                if(last.timestamp) {
-                    let date = new Date(last.timestamp);
-                    document.getElementById("last_time").innerText = date.getHours() + ":" + String(date.getMinutes()).padStart(2, '0');
-                }
-
-                // Desenha Gráfico
-                drawChart(data);
-                log("✅ Gráfico e Cards atualizados com sucesso.");
-
-            } catch (innerError) {
-                log("❌ ERRO AO PROCESSAR DADOS: " + innerError.message);
-            }
-        }, (errorObject) => {
-            log("❌ FALHA DE PERMISSÃO/LEITURA: " + errorObject.code);
-            log("Verifique se as REGRAS do banco estão como true.");
-        });
-    }
-
-    function drawChart(data) {
-        var dataTable = new google.visualization.DataTable();
-        dataTable.addColumn('string', 'Hora');
-        dataTable.addColumn('number', 'Interna');
-        dataTable.addColumn('number', 'Externa');
-
-        const keys = Object.keys(data);
-        keys.forEach(k => {
-            let d = data[k];
-            let hora = "";
-            if(d.timestamp) {
-                let dt = new Date(d.timestamp);
-                hora = dt.getHours() + ":" + String(dt.getMinutes()).padStart(2, '0');
-            }
-            dataTable.addRow([hora, parseFloat(d.temperature_in), parseFloat(d.temperature_out)]);
-        });
-
-        var options = {
-            backgroundColor: '#fff',
-            legend: { position: 'bottom' },
-            chartArea: { width: '85%', height: '70%' }
-        };
-
-        var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-        chart.draw(dataTable, options);
-    }
-</script>
-
-</body>
-</html>
+    <div class="container">
+        <!-- CARDS -->
+        <div class="cards">
+            <div class="card"><div>Status</div><div id="status_control" class="value">--</div></div>
+            <div class="card"><div>Setpoint</div><div id="setpoint" class="value">--</div></div>
+            <div class="card"><div>Temp. Interna</div><div id="temp_in" class="value">--</div></div>
+            <div class="card"><div>Temp. Externa</div><div id="temp_out" class="value">--</div></div>
             <div class="card"><div>Histerese</div><div id="hysterese" class="value">--</div></div>
             <div class="card"><div>Delay</div><div id="timedelay" class="value">--</div></div>
             <div class="card"><div>On Time</div><div id="ontime" class="value">--</div></div>
@@ -235,68 +52,103 @@
     </div>
 
 <script>
-    // 1. Configuração (COLE SEUS DADOS AQUI)
-const firebaseConfig = {
-  apiKey: "AIzaSyBcqFW9oxAxYNfzPpy01UC7XcCZi4rZR1Q",
-  authDomain: "meuprojetoiot-c9370.firebaseapp.com",
-  databaseURL: "https://meuprojetoiot-c9370-default-rtdb.firebaseio.com",
-  projectId: "meuprojetoiot-c9370",
-  storageBucket: "meuprojetoiot-c9370.firebasestorage.app",
-  messagingSenderId: "281502844111",
-  appId: "1:281502844111:web:d7e869de6c6ab007d863ba"
-};
+    // 1. CONFIGURAÇÃO DO FIREBASE (Copie do seu console)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBcqFW9oxAxYNfzPpy01UC7XcCZi4rZR1Q",
+      authDomain: "meuprojetoiot-c9370.firebaseapp.com",
+      databaseURL: "https://meuprojetoiot-c9370-default-rtdb.firebaseio.com",
+      projectId: "meuprojetoiot-c9370",
+      storageBucket: "meuprojetoiot-c9370.firebasestorage.app",
+      messagingSenderId: "281502844111",
+      appId: "1:281502844111:web:d7e869de6c6ab007d863ba"
+    };
 
-// Inicialização
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-google.charts.load('current', {packages: ['corechart', 'line']});
-google.charts.setOnLoadCallback(() => {
-    // Só começa a ler o banco quando o Google Charts estiver pronto
-    db.ref('historico').limitToLast(50).on('value', snapshot => {
-        const data = snapshot.val();
-        if (!data) return;
+    google.charts.load('current', {packages: ['corechart', 'line']});
+    google.charts.setOnLoadCallback(iniciarMonitoramento);
 
-        const keys = Object.keys(data);
-        const lastKey = keys[keys.length - 1];
-        const last = data[lastKey];
+    function iniciarMonitoramento() {
+        // Escuta a pasta "historico" em tempo real
+        db.ref('historico').limitToLast(50).on('value', snapshot => {
+            const data = snapshot.val();
+            if (!data) return;
 
-        // ATUALIZA OS CARDS
-        document.getElementById("temp_in").innerText = (last.temperature_in || 0).toFixed(1) + " °C";
-        document.getElementById("temp_out").innerText = (last.temperature_out || 0).toFixed(1) + " °C";
-        document.getElementById("setpoint").innerText = (last.setpoint || 0).toFixed(1) + " °C";
-        document.getElementById("hysterese").innerText = (last.hysterese || 0).toFixed(1) + " °C";
-        document.getElementById("status_control").innerText = (last.status_control == 1) ? "LIGADO" : "DESLIGADO";
-        document.getElementById("timedelay").innerText = (last.timedelay || 0) + "s";
-        document.getElementById("ontime").innerText = (last.ontime || 0) + "s";
-        document.getElementById("offtime").innerText = (last.offtime || 0) + "s";
+            // Converte o objeto do Firebase em array para o gráfico
+            const historyArray = Object.keys(data).map(key => {
+                const item = data[key];
+                const date = new Date(item.timestamp);
+                const horaStr = date.getHours() + ":" + String(date.getMinutes()).padStart(2, '0');
+                return [
+                    horaStr,
+                    item.temperature_out,
+                    item.temperature_in,
+                    item.setpoint,
+                    item.hysterese,
+                    item.status_control,
+                    item.timedelay,
+                    item.ontime,
+                    item.offtime
+                ];
+            });
 
-        // DESENHA O GRÁFICO
-        var chartData = new google.visualization.DataTable();
-        chartData.addColumn('string', 'Hora');
-        chartData.addColumn('number', 'Interna');
-        chartData.addColumn('number', 'Externa');
+            const lastEntry = historyArray[historyArray.length - 1];
+            atualizarCards(lastEntry);
+            drawChart(historyArray);
+        });
+    }
 
-        keys.forEach(k => {
-            let d = data[k];
-            let hora = "";
-            if(d.timestamp) {
-                let dt = new Date(d.timestamp);
-                hora = dt.getHours() + ":" + String(dt.getMinutes()).padStart(2, '0');
-            }
-            chartData.addRow([hora, d.temperature_in || 0, d.temperature_out || 0]);
+    function atualizarCards(last) {
+        const format1 = (v) => v !== undefined ? parseFloat(v).toFixed(1) : "--";
+        
+        let status = last[5] == 1 ? "REFRIGERANDO" : "STANDBY"; // Exemplo de lógica
+        let el = document.getElementById("status_control");
+        el.innerText = status;
+        el.style.color = status === "REFRIGERANDO" ? "#00bfff" : "#ccc";
+
+        document.getElementById("setpoint").innerText = format1(last[3]) + " °C";
+        document.getElementById("temp_in").innerText = format1(last[2]) + " °C";
+        document.getElementById("temp_out").innerText = format1(last[1]) + " °C";
+        document.getElementById("hysterese").innerText = format1(last[4]) + " °C";
+        document.getElementById("timedelay").innerText = last[6] + " s";
+        document.getElementById("ontime").innerText = last[7] + " s";
+        document.getElementById("offtime").innerText = last[8] + " s";
+    }
+
+    function drawChart(rows) {
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Hora');
+        data.addColumn('number', 'Temp Interna');
+        data.addColumn('number', 'Temp Externa');
+        data.addColumn('number', 'Setpoint');
+        data.addColumn('number', 'Limite Sup');
+        data.addColumn('number', 'Limite Inf');
+
+        let newRows = rows.map(r => {
+            let setpoint = r[3];
+            let hyst = r[4];
+            return [r[0], r[2], r[1], setpoint, setpoint + (hyst/2), setpoint - (hyst/2)];
         });
 
+        data.addRows(newRows);
+
         var options = {
-            legend: 'bottom',
+            backgroundColor: '#fff',
             curveType: 'function',
-            chartArea: { width: '90%', height: '70%' }
+            legend: { position: 'bottom' },
+            series: {
+                0: { color: '#e74c3c' }, // interna
+                1: { color: '#3498db' }, // externa
+                2: { color: '#2ecc71' }, // setpoint
+                3: { lineDashStyle: [4, 4], color: '#999' },
+                4: { lineDashStyle: [4, 4], color: '#999' }
+            }
         };
 
         var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-        chart.draw(chartData, options);
-    });
-});
+        chart.draw(data, options);
+    }
 </script>
 </body>
 </html>
