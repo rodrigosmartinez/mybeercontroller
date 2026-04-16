@@ -51,104 +51,145 @@
         </div>
     </div>
 
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
 <script>
-    // 1. CONFIGURAÇÃO DO FIREBASE (Copie do seu console)
-    const firebaseConfig = {
-      apiKey: "AIzaSyBcqFW9oxAxYNfzPpy01UC7XcCZi4rZR1Q",
-      authDomain: "meuprojetoiot-c9370.firebaseapp.com",
-      databaseURL: "https://meuprojetoiot-c9370-default-rtdb.firebaseio.com",
-      projectId: "meuprojetoiot-c9370",
-      storageBucket: "meuprojetoiot-c9370.firebasestorage.app",
-      messagingSenderId: "281502844111",
-      appId: "1:281502844111:web:d7e869de6c6ab007d863ba"
+const firebaseConfig = {
+  apiKey: "AIzaSyBcqFW9oxAxYNfzPpy01UC7XcCZi4rZR1Q",
+  authDomain: "meuprojetoiot-c9370.firebaseapp.com",
+  databaseURL: "https://meuprojetoiot-c9370-default-rtdb.firebaseio.com",
+  projectId: "meuprojetoiot-c9370"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+google.charts.load('current', {packages: ['corechart', 'line']});
+google.charts.setOnLoadCallback(iniciarFirebase);
+
+function iniciarFirebase() {
+
+    db.ref('historico').limitToLast(50).on('value', snapshot => {
+
+        const data = snapshot.val();
+        if (!data) return;
+
+        let history = [];
+        let keys = Object.keys(data);
+
+        keys.sort(); // garante ordem
+
+        for (let k of keys) {
+            let item = data[k];
+
+            let date = new Date(item.timestamp || Date.now());
+            let hora = date.getHours() + ":" + String(date.getMinutes()).padStart(2, '0');
+
+            history.push([
+                hora,
+                item.temperature_out,
+                item.temperature_in,
+                item.setpoint,
+                item.hysterese,
+                item.status_control,
+                item.timedelay,
+                item.ontime,
+                item.offtime
+            ]);
+        }
+
+        let last = history[history.length - 1];
+
+        atualizarCards(last);
+        drawChart(history);
+    });
+}
+
+function atualizarCards(last) {
+
+    function format1(v){ return (v !== undefined) ? parseFloat(v).toFixed(1) : "--"; }
+    function format0(v){ return (v !== undefined) ? parseFloat(v).toFixed(0) : "--"; }
+
+    let statusCode = last[5];
+
+    let status = "STANDBY";
+    if (statusCode == 1) status = "REFRIGERANDO";
+    else if (statusCode == 0) status = "AQUECENDO";
+
+    let el = document.getElementById("status_control");
+    el.innerText = status;
+
+    if (status === "REFRIGERANDO") {
+        el.style.fontSize = "18px";
+    } else {
+        el.style.fontSize = "22px";
+    }
+
+    if (status === "REFRIGERANDO") el.style.color = "#00bfff";
+    else if (status === "AQUECENDO") el.style.color = "#ff4d4d";
+    else el.style.color = "#ccc";
+
+    document.getElementById("setpoint").innerText = format1(last[3]) + " °C";
+    document.getElementById("temp_in").innerText = format1(last[2]) + " °C";
+    document.getElementById("temp_out").innerText = format1(last[1]) + " °C";
+    document.getElementById("hysterese").innerText = format1(last[4]) + " °C";
+    document.getElementById("timedelay").innerText = format0(last[6]) + " s";
+    document.getElementById("ontime").innerText = format0(last[7]) + " s";
+    document.getElementById("offtime").innerText = format0(last[8]) + " s";
+}
+
+function drawChart(rows) {
+
+    var data = new google.visualization.DataTable();
+    data.addColumn('string', 'Hora');
+    data.addColumn('number', 'Temp Interna');
+    data.addColumn('number', 'Temp Externa');
+    data.addColumn('number', 'Setpoint');
+    data.addColumn('number', 'Limite Superior');
+    data.addColumn('number', 'Limite Inferior');
+
+    let newRows = rows.map(r => {
+        let setpoint = r[3];
+        let hyst = r[4];
+
+        return [
+            r[0],
+            r[2],
+            r[1],
+            setpoint,
+            setpoint + (hyst / 2),
+            setpoint - (hyst / 2)
+        ];
+    });
+
+    data.addRows(newRows);
+
+    var options = {
+        legend: 'right',
+        series: {
+            0: { lineWidth: 1},
+            1: { lineWidth: 2, lineDashStyle: [4,4] },
+            2: { lineWidth: 2 },
+            3: { lineDashStyle: [4,4], color: '#999', visibleInLegend: false },
+            4: { lineDashStyle: [4,4], color: '#999', visibleInLegend: false }
+        },
+        hAxis: {
+            title: 'Hora',
+            slantedText: true,
+            slantedTextAngle: 90,
+            textStyle: {fontSize: 10}
+        },
+        vAxis: {
+            title: 'Temperatura (°C)'
+        },
+        backgroundColor: '#ffffff',
+        chartArea:{left:'8%',top:'10%',width:'75%',height:'70%'}
     };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    google.charts.load('current', {packages: ['corechart', 'line']});
-    google.charts.setOnLoadCallback(iniciarMonitoramento);
-
-    function iniciarMonitoramento() {
-        // Escuta a pasta "historico" em tempo real
-        db.ref('historico').limitToLast(50).on('value', snapshot => {
-            const data = snapshot.val();
-            if (!data) return;
-
-            // Converte o objeto do Firebase em array para o gráfico
-            const historyArray = Object.keys(data).map(key => {
-                const item = data[key];
-                const date = new Date(item.timestamp);
-                const horaStr = date.getHours() + ":" + String(date.getMinutes()).padStart(2, '0');
-                return [
-                    horaStr,
-                    item.temperature_out,
-                    item.temperature_in,
-                    item.setpoint,
-                    item.hysterese,
-                    item.status_control,
-                    item.timedelay,
-                    item.ontime,
-                    item.offtime
-                ];
-            });
-
-            const lastEntry = historyArray[historyArray.length - 1];
-            atualizarCards(lastEntry);
-            drawChart(historyArray);
-        });
-    }
-
-    function atualizarCards(last) {
-        const format1 = (v) => v !== undefined ? parseFloat(v).toFixed(1) : "--";
-        
-        let status = last[5] == 1 ? "REFRIGERANDO" : "STANDBY"; // Exemplo de lógica
-        let el = document.getElementById("status_control");
-        el.innerText = status;
-        el.style.color = status === "REFRIGERANDO" ? "#00bfff" : "#ccc";
-
-        document.getElementById("setpoint").innerText = format1(last[3]) + " °C";
-        document.getElementById("temp_in").innerText = format1(last[2]) + " °C";
-        document.getElementById("temp_out").innerText = format1(last[1]) + " °C";
-        document.getElementById("hysterese").innerText = format1(last[4]) + " °C";
-        document.getElementById("timedelay").innerText = last[6] + " s";
-        document.getElementById("ontime").innerText = last[7] + " s";
-        document.getElementById("offtime").innerText = last[8] + " s";
-    }
-
-    function drawChart(rows) {
-        var data = new google.visualization.DataTable();
-        data.addColumn('string', 'Hora');
-        data.addColumn('number', 'Temp Interna');
-        data.addColumn('number', 'Temp Externa');
-        data.addColumn('number', 'Setpoint');
-        data.addColumn('number', 'Limite Sup');
-        data.addColumn('number', 'Limite Inf');
-
-        let newRows = rows.map(r => {
-            let setpoint = r[3];
-            let hyst = r[4];
-            return [r[0], r[2], r[1], setpoint, setpoint + (hyst/2), setpoint - (hyst/2)];
-        });
-
-        data.addRows(newRows);
-
-        var options = {
-            backgroundColor: '#fff',
-            curveType: 'function',
-            legend: { position: 'bottom' },
-            series: {
-                0: { color: '#e74c3c' }, // interna
-                1: { color: '#3498db' }, // externa
-                2: { color: '#2ecc71' }, // setpoint
-                3: { lineDashStyle: [4, 4], color: '#999' },
-                4: { lineDashStyle: [4, 4], color: '#999' }
-            }
-        };
-
-        var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-        chart.draw(data, options);
-    }
+    var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+    chart.draw(data, options);
+}
 </script>
 </body>
 </html>
