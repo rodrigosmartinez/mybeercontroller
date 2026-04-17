@@ -1,212 +1,220 @@
 <!DOCTYPE html>
+
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>MyBeerController - Firebase</title>
-    <!-- Incluindo o SDK do Firebase via CDN -->
-    <script src="https://gstatic.com"></script>
-    <script src="https://gstatic.com"></script>
-    <script src="https://www.gstatic.com/charts/loader.js"></script>
+<meta charset="UTF-8">
+<title>MyBeerController</title>
 
-    <style>
-        /* Mantenha todo o seu CSS original aqui */
-        body { font-family: Arial; background: #111; color: white; text-align: center; }
-        .container { width: 1000px; margin: auto; }
-        .cards { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
-        .card { background: #222; padding: 15px; border-radius: 10px; width: 150px; }
-        .card div:first-child { font-size: 12px; color: #bbb; }
-        .value { font-size: 18px; font-weight: bold; }
-        #chart_div { height: 400px; background: #fff; border-radius: 15px; margin-bottom: 80px; overflow: hidden; }
-        .info-section { display: flex; align-items: flex-start; justify-content: center; gap: 30px; margin-top: 20px; color: white; }
-        .info-section img { width: 700px; border-radius: 10px; }
-        .info-text { max-width: 400px; text-align: justify; }
-        #footer { margin-top: 30px; font-size: 12px; color: #aaa; }
-    </style>
+<script src="https://www.gstatic.com/charts/loader.js"></script>
+
+<style>
+body {
+    font-family: Arial;
+    background: #0d1117;
+    color: white;
+    margin: 0;
+}
+
+h1 {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.container {
+    max-width: 1100px;
+    margin: auto;
+    padding: 10px;
+}
+
+/* CARDS */
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+}
+
+.card {
+    background: #161b22;
+    padding: 12px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
+.card-title {
+    font-size: 12px;
+    color: #aaa;
+    margin-bottom: 5px;
+}
+
+.value {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* INPUT */
+input {
+    width: 90%;
+    padding: 6px;
+    border-radius: 6px;
+    border: none;
+    text-align: center;
+    background: #0d1117;
+    color: white;
+}
+
+/* BOTÃO */
+.btn {
+    margin-top: 15px;
+    padding: 12px;
+    width: 100%;
+    background: #238636;
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-size: 16px;
+}
+
+.btn:active {
+    background: #2ea043;
+}
+
+/* STATUS */
+.status {
+    font-weight: bold;
+}
+
+#chart_div {
+    margin-top: 20px;
+    height: 350px;
+    background: white;
+    border-radius: 12px;
+}
+
+/* FEEDBACK */
+#msg {
+    margin-top: 10px;
+    text-align: center;
+    font-size: 14px;
+}
+</style>
+
 </head>
+
 <body>
 
-    <h1>🍺 MyBeerController</h1>
-    
-    <div class="container">
-        <!-- CARDS -->
-        <div class="cards">
-            <div class="card"><div>Status</div><div id="status_control" class="value">--</div></div>
-            <div class="card"><div>Setpoint</div><div id="setpoint" class="value">--</div></div>
-            <div class="card"><div>Temp. Interna</div><div id="temp_in" class="value">--</div></div>
-            <div class="card"><div>Temp. Externa</div><div id="temp_out" class="value">--</div></div>
-            <div class="card"><div>Histerese</div><div id="hysterese" class="value">--</div></div>
-            <div class="card"><div>Delay</div><div id="timedelay" class="value">--</div></div>
-            <div class="card"><div>On Time</div><div id="ontime" class="value">--</div></div>
-            <div class="card"><div>Off Time</div><div id="offtime" class="value">--</div></div>
-        </div>
+<h1>🍺 MyBeerController</h1>
 
-        <div id="chart_div"></div>
+<div class="container">
 
-        <div class="info-section">
-            <img src="http://mybeercontroller.rf.gd/cat.jpg" alt="MyBeerController">
-            <div class="info-text">
-                <h1 style="text-align: center;"><b>Controle de temperatura de fermentação!</b></b></h1>
-                <p>
-                Os dados apresentados no gráfico acima são coletados por um sistema embarcado baseado em Arduino,
-                instalado em uma geladeira fermentadora e conectado à internet via Wi-Fi. As medições realizadas
-                são transmitidas automaticamente para a nuvem, onde são armazenadas no <b>Firebase Realtime Database</b>
-                e disponibilizadas por meio de uma aplicação hospedada no <b>GitHub</b>, permitindo o monitoramento
-                remoto, contínuo e em tempo real de todo o processo de fermentação.
-                </p>
-            </div>
-        </div>
+<div class="cards">
 
-        <!-- FOOTER -->
-        <div id="footer">
-            <a href="http://mybeercontroller.rf.gd/" target="_blank">MyBeerController</a>
-            <span class="pipe">|</span>
-            <a href="http://mybeercontroller.rf.gd/auth" target="_blank">Client Area</a>
-            <span class="pipe">|</span>
-            <a href="http://www.facebook.com" target="_blank">Find MyBeerController on Facebook</a>
-            <div style="margin-top:5px;">Copyright © MyBeerController 2026</div>
-        </div>
-        
-    </div>
+<div class="card">
+<div class="card-title">Status</div>
+<div id="status_control" class="value status">--</div>
+</div>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<div class="card">
+<div class="card-title">Temp. Interna</div>
+<div id="temp_in" class="value">--</div>
+</div>
+
+<div class="card">
+<div class="card-title">Temp. Externa</div>
+<div id="temp_out" class="value">--</div>
+</div>
+
+<div class="card">
+<div class="card-title">Setpoint</div>
+<input id="setpoint" type="number" step="0.1">
+</div>
+
+<div class="card">
+<div class="card-title">Histerese</div>
+<input id="hysterese" type="number" step="0.1">
+</div>
+
+<div class="card">
+<div class="card-title">Delay</div>
+<input id="timedelay" type="number">
+</div>
+
+<div class="card">
+<div class="card-title">On Time</div>
+<input id="ontime" type="number">
+</div>
+
+<div class="card">
+<div class="card-title">Off Time</div>
+<input id="offtime" type="number">
+</div>
+
+</div>
+
+<button class="btn" onclick="enviarSet()">Enviar Configuração</button>
+
+<div id="msg"></div>
+
+<div id="chart_div"></div>
+
+</div>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyBcqFW9oxAxYNfzPpy01UC7XcCZi4rZR1Q",
-  authDomain: "meuprojetoiot-c9370.firebaseapp.com",
-  databaseURL: "https://meuprojetoiot-c9370-default-rtdb.firebaseio.com",
-  projectId: "meuprojetoiot-c9370"
-};
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+const ESP_IP = "http://SEU_IP_OU_NOIP"; // 🔥 ALTERAR
 
-google.charts.load('current', {packages: ['corechart', 'line']});
-google.charts.setOnLoadCallback(iniciarFirebase);
+// 🔄 Atualiza dados
+async function atualizar() {
+    try {
+        const res = await fetch(ESP_IP + "/status");
+        const data = await res.json();
 
-function iniciarFirebase() {
+        document.getElementById("temp_in").innerText = data.temp_in.toFixed(1) + "°C";
+        document.getElementById("temp_out").innerText = data.temp_out.toFixed(1) + "°C";
 
-    db.ref('historico').limitToLast(50).on('value', snapshot => {
+        document.getElementById("setpoint").value = data.setpoint;
+        document.getElementById("hysterese").value = data.hysterese;
 
-        const data = snapshot.val();
-        if (!data) return;
+        // status simples
+        let status = "STANDBY";
+        if (data.temp_in > data.setpoint) status = "REFRIGERANDO";
+        else if (data.temp_in < data.setpoint) status = "AQUECENDO";
 
-        let history = [];
-        let keys = Object.keys(data);
+        let el = document.getElementById("status_control");
+        el.innerText = status;
 
-        keys.sort(); // garante ordem
+        if (status === "REFRIGERANDO") el.style.color = "#00bfff";
+        else if (status === "AQUECENDO") el.style.color = "#ff4d4d";
+        else el.style.color = "#ccc";
 
-        for (let k of keys) {
-            let item = data[k];
-
-            let date = new Date(item.timestamp || Date.now());
-            let hora = date.getHours() + ":" + String(date.getMinutes()).padStart(2, '0');
-
-            history.push([
-                hora,
-                item.temperature_out,
-                item.temperature_in,
-                item.setpoint,
-                item.hysterese,
-                item.status_control,
-                item.timedelay,
-                item.ontime,
-                item.offtime
-            ]);
-        }
-
-        let last = history[history.length - 1];
-
-        atualizarCards(last);
-        drawChart(history);
-    });
-}
-
-function atualizarCards(last) {
-
-    function format1(v){ return (v !== undefined) ? parseFloat(v).toFixed(1) : "--"; }
-    function format0(v){ return (v !== undefined) ? parseFloat(v).toFixed(0) : "--"; }
-
-    let statusCode = last[5];
-
-    let status = "STANDBY";
-    if (statusCode == 1) status = "REFRIGERANDO";
-    else if (statusCode == 0) status = "AQUECENDO";
-
-    let el = document.getElementById("status_control");
-    el.innerText = status;
-
-    if (status === "REFRIGERANDO") {
-        el.style.fontSize = "18px";
-    } else {
-        el.style.fontSize = "22px";
+    } catch(e) {
+        document.getElementById("msg").innerText = "Erro ao conectar";
     }
-
-    if (status === "REFRIGERANDO") el.style.color = "#00bfff";
-    else if (status === "AQUECENDO") el.style.color = "#ff4d4d";
-    else el.style.color = "#ccc";
-
-    document.getElementById("setpoint").innerText = format1(last[3]) + " °C";
-    document.getElementById("temp_in").innerText = format1(last[2]) + " °C";
-    document.getElementById("temp_out").innerText = format1(last[1]) + " °C";
-    document.getElementById("hysterese").innerText = format1(last[4]) + " °C";
-    document.getElementById("timedelay").innerText = format0(last[6]) + " s";
-    document.getElementById("ontime").innerText = format0(last[7]) + " s";
-    document.getElementById("offtime").innerText = format0(last[8]) + " s";
 }
 
-function drawChart(rows) {
+// 📤 Envia config
+async function enviarSet() {
 
-    var data = new google.visualization.DataTable();
-    data.addColumn('string', 'Hora');
-    data.addColumn('number', 'Temp Interna');
-    data.addColumn('number', 'Temp Externa');
-    data.addColumn('number', 'Setpoint');
-    data.addColumn('number', 'Limite Superior');
-    data.addColumn('number', 'Limite Inferior');
+    const url = ESP_IP + "/set?" +
+        "setpoint=" + document.getElementById("setpoint").value +
+        "&hysterese=" + document.getElementById("hysterese").value +
+        "&timedelay=" + document.getElementById("timedelay").value +
+        "&ontime=" + document.getElementById("ontime").value +
+        "&offtime=" + document.getElementById("offtime").value;
 
-    let newRows = rows.map(r => {
-        let setpoint = r[3];
-        let hyst = r[4];
-
-        return [
-            r[0],
-            r[2],
-            r[1],
-            setpoint,
-            setpoint + (hyst / 2),
-            setpoint - (hyst / 2)
-        ];
-    });
-
-    data.addRows(newRows);
-
-    var options = {
-        legend: 'right',
-        series: {
-            0: { lineWidth: 1},
-            1: { lineWidth: 2, lineDashStyle: [4,4] },
-            2: { lineWidth: 2 },
-            3: { lineDashStyle: [4,4], color: '#999', visibleInLegend: false },
-            4: { lineDashStyle: [4,4], color: '#999', visibleInLegend: false }
-        },
-        hAxis: {
-            title: 'Hora',
-            slantedText: true,
-            slantedTextAngle: 90,
-            textStyle: {fontSize: 10}
-        },
-        vAxis: {
-            title: 'Temperatura (°C)'
-        },
-        backgroundColor: '#ffffff',
-        chartArea:{left:'8%',top:'10%',width:'75%',height:'70%'}
-    };
-
-    var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-    chart.draw(data, options);
+    try {
+        await fetch(url);
+        document.getElementById("msg").innerText = "✅ Configuração enviada!";
+    } catch(e) {
+        document.getElementById("msg").innerText = "❌ Erro ao enviar!";
+    }
 }
+
+// 🔄 auto update
+setInterval(atualizar, 3000);
+atualizar();
+
 </script>
+
 </body>
 </html>
