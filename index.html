@@ -1,219 +1,221 @@
 <!DOCTYPE html>
-
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>MyBeerController</title>
+    <meta charset="UTF-8">
+    <title>MyBeerController - Firebase</title>
 
-<script src="https://www.gstatic.com/charts/loader.js"></script>
+    <script src="https://www.gstatic.com/charts/loader.js"></script>
 
-<style>
-body {
-    font-family: Arial;
-    background: #0d1117;
-    color: white;
-    margin: 0;
-}
+    <style>
+        body { font-family: Arial; background: #111; color: white; text-align: center; }
+        .container { width: 1000px; margin: auto; }
+        .cards { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .card { background: #222; padding: 15px; border-radius: 10px; width: 150px; }
+        .card div:first-child { font-size: 12px; color: #bbb; }
+        .value { font-size: 18px; font-weight: bold; }
 
-h1 {
-    text-align: center;
-    margin: 20px 0;
-}
+        .input-card {
+            width: 90%;
+            text-align: center;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px;
+            font-size: 16px;
+        }
 
-.container {
-    max-width: 1100px;
-    margin: auto;
-    padding: 10px;
-}
+        #chart_div { height: 400px; background: #fff; border-radius: 15px; margin-bottom: 80px; overflow: hidden; }
 
-/* CARDS */
-.cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 10px;
-}
+        .info-section { display: flex; align-items: flex-start; justify-content: center; gap: 30px; margin-top: 20px; color: white; }
+        .info-section img { width: 700px; border-radius: 10px; }
+        .info-text { max-width: 400px; text-align: justify; }
 
-.card {
-    background: #161b22;
-    padding: 12px;
-    border-radius: 12px;
-    text-align: center;
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
-}
-
-.card-title {
-    font-size: 12px;
-    color: #aaa;
-    margin-bottom: 5px;
-}
-
-.value {
-    font-size: 18px;
-    font-weight: bold;
-}
-
-/* INPUT */
-input {
-    width: 90%;
-    padding: 6px;
-    border-radius: 6px;
-    border: none;
-    text-align: center;
-    background: #0d1117;
-    color: white;
-}
-
-/* BOTÃO */
-.btn {
-    margin-top: 15px;
-    padding: 12px;
-    width: 100%;
-    background: #238636;
-    border: none;
-    border-radius: 10px;
-    color: white;
-    font-size: 16px;
-}
-
-.btn:active {
-    background: #2ea043;
-}
-
-/* STATUS */
-.status {
-    font-weight: bold;
-}
-
-#chart_div {
-    margin-top: 20px;
-    height: 350px;
-    background: white;
-    border-radius: 12px;
-}
-
-/* FEEDBACK */
-#msg {
-    margin-top: 10px;
-    text-align: center;
-    font-size: 14px;
-}
-</style>
-
+        #footer { margin-top: 30px; font-size: 12px; color: #aaa; }
+    </style>
 </head>
-
 <body>
 
 <h1>🍺 MyBeerController</h1>
 
 <div class="container">
 
-<div class="cards">
+    <!-- CARDS -->
+    <div class="cards">
+        <div class="card"><div>Status</div><div id="status_control" class="value">--</div></div>
 
-<div class="card">
-<div class="card-title">Status</div>
-<div id="status_control" class="value status">--</div>
+        <div class="card"><div>Setpoint</div>
+            <input id="setpoint" class="input-card">
+        </div>
+
+        <div class="card"><div>Temp. Interna</div><div id="temp_in" class="value">--</div></div>
+
+        <div class="card"><div>Temp. Externa</div><div id="temp_out" class="value">--</div></div>
+
+        <div class="card"><div>Histerese</div>
+            <input id="hysterese" class="input-card">
+        </div>
+
+        <div class="card"><div>Delay</div>
+            <input id="timedelay" class="input-card">
+        </div>
+
+        <div class="card"><div>On Time</div>
+            <input id="ontime" class="input-card">
+        </div>
+
+        <div class="card"><div>Off Time</div>
+            <input id="offtime" class="input-card">
+        </div>
+    </div>
+
+    <button onclick="enviarParametros()" style="padding:10px 20px; font-size:16px;">
+        Enviar
+    </button>
+
+    <div id="chart_div"></div>
+
+    <div class="info-section">
+        <img src="http://mybeercontroller.rf.gd/cat.jpg">
+        <div class="info-text">
+            <h2>Controle de fermentação</h2>
+            <p>
+                Sistema baseado em Arduino com envio de dados para o Firebase,
+                permitindo monitoramento remoto em tempo real.
+            </p>
+        </div>
+    </div>
+
+    <div id="footer">
+        MyBeerController © 2026
+    </div>
+
 </div>
 
-<div class="card">
-<div class="card-title">Temp. Interna</div>
-<div id="temp_in" class="value">--</div>
-</div>
-
-<div class="card">
-<div class="card-title">Temp. Externa</div>
-<div id="temp_out" class="value">--</div>
-</div>
-
-<div class="card">
-<div class="card-title">Setpoint</div>
-<input id="setpoint" type="number" step="0.1">
-</div>
-
-<div class="card">
-<div class="card-title">Histerese</div>
-<input id="hysterese" type="number" step="0.1">
-</div>
-
-<div class="card">
-<div class="card-title">Delay</div>
-<input id="timedelay" type="number">
-</div>
-
-<div class="card">
-<div class="card-title">On Time</div>
-<input id="ontime" type="number">
-</div>
-
-<div class="card">
-<div class="card-title">Off Time</div>
-<input id="offtime" type="number">
-</div>
-
-</div>
-
-<button class="btn" onclick="enviarSet()">Enviar Configuração</button>
-
-<div id="msg"></div>
-
-<div id="chart_div"></div>
-
-</div>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBcqFW9oxAxYNfzPpy01UC7XcCZi4rZR1Q",
+  authDomain: "meuprojetoiot-c9370.firebaseapp.com",
+  databaseURL: "https://meuprojetoiot-c9370-default-rtdb.firebaseio.com",
+  projectId: "meuprojetoiot-c9370"
+};
 
-const ESP_IP = "http://SEU_IP_OU_NOIP"; // 🔥 ALTERAR
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-// 🔄 Atualiza dados
-async function atualizar() {
-    try {
-        const res = await fetch(ESP_IP + "/status");
-        const data = await res.json();
+google.charts.load('current', {packages: ['corechart', 'line']});
+google.charts.setOnLoadCallback(iniciarFirebase);
 
-        document.getElementById("temp_in").innerText = data.temp_in.toFixed(1) + "°C";
-        document.getElementById("temp_out").innerText = data.temp_out.toFixed(1) + "°C";
+function iniciarFirebase() {
 
-        document.getElementById("setpoint").value = data.setpoint;
-        document.getElementById("hysterese").value = data.hysterese;
+    db.ref('historico').limitToLast(50).on('value', snapshot => {
 
-        // status simples
-        let status = "STANDBY";
-        if (data.temp_in > data.setpoint) status = "REFRIGERANDO";
-        else if (data.temp_in < data.setpoint) status = "AQUECENDO";
+        const data = snapshot.val();
+        if (!data) return;
 
-        let el = document.getElementById("status_control");
-        el.innerText = status;
+        let history = [];
+        let keys = Object.keys(data);
+        keys.sort();
 
-        if (status === "REFRIGERANDO") el.style.color = "#00bfff";
-        else if (status === "AQUECENDO") el.style.color = "#ff4d4d";
-        else el.style.color = "#ccc";
+        for (let k of keys) {
+            let item = data[k];
 
-    } catch(e) {
-        document.getElementById("msg").innerText = "Erro ao conectar";
-    }
+            let date = new Date(item.timestamp || Date.now());
+            let hora = date.getHours() + ":" + String(date.getMinutes()).padStart(2, '0');
+
+            history.push([
+                hora,
+                item.temperature_out,
+                item.temperature_in,
+                item.setpoint,
+                item.hysterese,
+                item.status_control,
+                item.timedelay,
+                item.ontime,
+                item.offtime
+            ]);
+        }
+
+        let last = history[history.length - 1];
+
+        atualizarCards(last);
+        drawChart(history);
+    });
 }
 
-// 📤 Envia config
-async function enviarSet() {
+function atualizarCards(last) {
 
-    const url = ESP_IP + "/set?" +
-        "setpoint=" + document.getElementById("setpoint").value +
-        "&hysterese=" + document.getElementById("hysterese").value +
-        "&timedelay=" + document.getElementById("timedelay").value +
-        "&ontime=" + document.getElementById("ontime").value +
-        "&offtime=" + document.getElementById("offtime").value;
+    function f1(v){ return (v !== undefined) ? parseFloat(v).toFixed(1) : ""; }
+    function f0(v){ return (v !== undefined) ? parseInt(v) : ""; }
 
-    try {
-        await fetch(url);
-        document.getElementById("msg").innerText = "✅ Configuração enviada!";
-    } catch(e) {
-        document.getElementById("msg").innerText = "❌ Erro ao enviar!";
-    }
+    let status = "STANDBY";
+    if (last[5] == 1) status = "REFRIGERANDO";
+    else if (last[5] == 0) status = "AQUECENDO";
+
+    let el = document.getElementById("status_control");
+    el.innerText = status;
+
+    if (status === "REFRIGERANDO") el.style.color = "#00bfff";
+    else if (status === "AQUECENDO") el.style.color = "#ff4d4d";
+    else el.style.color = "#ccc";
+
+    document.getElementById("setpoint").value = f1(last[3]);
+    document.getElementById("hysterese").value = f1(last[4]);
+    document.getElementById("timedelay").value = f0(last[6]);
+    document.getElementById("ontime").value = f0(last[7]);
+    document.getElementById("offtime").value = f0(last[8]);
+
+    document.getElementById("temp_in").innerText = f1(last[2]) + " °C";
+    document.getElementById("temp_out").innerText = f1(last[1]) + " °C";
 }
 
-// 🔄 auto update
-setInterval(atualizar, 3000);
-atualizar();
+function enviarParametros() {
 
+    const dados = {
+        setpoint: parseFloat(document.getElementById("setpoint").value),
+        hysterese: parseFloat(document.getElementById("hysterese").value),
+        timedelay: parseInt(document.getElementById("timedelay").value),
+        ontime: parseInt(document.getElementById("ontime").value),
+        offtime: parseInt(document.getElementById("offtime").value),
+        timestamp: Date.now()
+    };
+
+    console.log("Enviando:", dados);
+
+    firebase.database().ref("comandos").set(dados)
+        .then(() => alert("Enviado!"))
+        .catch(err => console.error(err));
+}
+
+function drawChart(rows) {
+
+    var data = new google.visualization.DataTable();
+    data.addColumn('string', 'Hora');
+    data.addColumn('number', 'Temp Interna');
+    data.addColumn('number', 'Temp Externa');
+    data.addColumn('number', 'Setpoint');
+    data.addColumn('number', 'Limite Superior');
+    data.addColumn('number', 'Limite Inferior');
+
+    let newRows = rows.map(r => {
+        let sp = r[3];
+        let h = r[4];
+
+        return [r[0], r[2], r[1], sp, sp + (h/2), sp - (h/2)];
+    });
+
+    data.addRows(newRows);
+
+    var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+    chart.draw(data, {
+        legend: 'right',
+        backgroundColor: '#ffffff'
+    });
+}
 </script>
 
 </body>
