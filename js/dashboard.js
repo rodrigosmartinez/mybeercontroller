@@ -1,125 +1,286 @@
 // ========================================
-// MyBeerController - Dashboard
+// MyBeerController Dashboard
+// Firebase + Chart.js
 // ========================================
+
+let chart;
+
+
+// Inicialização
 
 function iniciarFirebase() {
 
-    // Gráfico - dados do /historico
-    db.ref("historico").limitToLast(50).on("value", snapshot => {
+    carregarHistorico();
 
-        const data = snapshot.val();
-        if (!data) return;
+    carregarStatus();
 
-        let history = [];
-
-        Object.keys(data).sort().forEach(key => {
-
-            const item = data[key];
-            const date = new Date(item.timestamp || Date.now());
-
-            const hora =
-                date.getHours() + ":" +
-                String(date.getMinutes()).padStart(2, "0");
-
-            history.push([
-                hora,
-                Number(item.temp_out_filtered),
-                Number(item.temp_in_filtered),
-                Number(item.setpoint),
-                Number(item.hysterese)
-            ]);
-        });
-
-        drawChart(history);
-    });
+}
 
 
-    // Cards - dados do /status
+// ========================================
+// Cards
+// Origem: /status
+// ========================================
+
+function carregarStatus() {
+
     db.ref("status").on("value", snapshot => {
 
         const status = snapshot.val();
 
-        console.log("STATUS RECEBIDO:", status);
+        if (!status)
+            return;
 
-        if (!status) return;
 
         atualizarCards(status);
+
     });
+
 }
 
 
-// Atualiza os valores dos cards
+// Atualiza os cards
 
 function atualizarCards(status) {
 
-    function decimal(valor) {
-        return (valor !== undefined && valor !== null)
-            ? Number(valor).toFixed(1)
-            : "";
-    }
-
-
-    function inteiro(valor) {
-        return (valor !== undefined && valor !== null)
-            ? parseInt(valor)
-            : "";
-    }
-
-
-    let textoStatus = "STANDBY";
-
-    if (status.status_control == 1)
-        textoStatus = "REFRIGERANDO";
-
-    else if (status.status_control == 0)
-        textoStatus = "AQUECENDO";
-
-
-    const statusElement = document.getElementById("status_control");
-
-    if (statusElement) {
-
-        statusElement.innerText = textoStatus;
-
-        if (textoStatus === "REFRIGERANDO")
-            statusElement.style.color = "#00bfff";
-
-        else if (textoStatus === "AQUECENDO")
-            statusElement.style.color = "#ff4d4d";
-
-        else
-            statusElement.style.color = "#ccc";
-    }
-
 
     document.getElementById("setpoint").value =
-        decimal(status.setpoint);
+        formatarNumero(status.setpoint);
+
 
     document.getElementById("hysterese").value =
-        decimal(status.hysterese);
+        formatarNumero(status.hysterese);
+
 
     document.getElementById("timedelay").value =
-        inteiro(status.timedelay);
+        status.timedelay;
+
 
     document.getElementById("ontime").value =
-        inteiro(status.ontime);
+        status.ontime;
+
 
     document.getElementById("offtime").value =
-        inteiro(status.offtime);
+        status.offtime;
 
 
     document.getElementById("temp_in").value =
-        decimal(status.temp_in_filtered) + " °C";
+        formatarNumero(status.temp_in_filtered) + " °C";
+
 
     document.getElementById("temp_out").value =
-        decimal(status.temp_out_filtered) + " °C";
+        formatarNumero(status.temp_out_filtered) + " °C";
+
+
+
+    let texto = "STANDBY";
+
+
+    if (status.status_control == 1)
+        texto = "REFRIGERANDO";
+
+
+    else if (status.status_control == 0)
+        texto = "AQUECENDO";
+
+
+    document.getElementById("status_control").innerText =
+        texto;
+
+
+    const elemento =
+        document.getElementById("status_control");
+
+
+    if (texto === "REFRIGERANDO")
+        elemento.style.color = "#00bfff";
+
+    else if (texto === "AQUECENDO")
+        elemento.style.color = "#ff4d4d";
+
+    else
+        elemento.style.color = "#ccc";
+
 }
 
 
-// Google Charts
+// ========================================
+// Histórico
+// Origem: /historico
+// ========================================
 
-google.charts.load("current", {
-    packages: ["corechart", "line"]
-});
+function carregarHistorico() {
 
-google.charts.setOnLoadCallback(iniciarFirebase);
+
+    db.ref("historico")
+        .limitToLast(100)
+        .on("value", snapshot => {
+
+
+            const dados = snapshot.val();
+
+
+            if (!dados)
+                return;
+
+
+            let labels = [];
+            let tempIn = [];
+            let tempOut = [];
+            let setpoint = [];
+
+
+            Object.keys(dados)
+                .sort()
+                .forEach(key => {
+
+
+                    const item = dados[key];
+
+
+                    const data =
+                        new Date(item.timestamp);
+
+
+                    labels.push(
+                        data.toLocaleTimeString()
+                    );
+
+
+                    tempIn.push(
+                        Number(item.temp_in_filtered)
+                    );
+
+
+                    tempOut.push(
+                        Number(item.temp_out_filtered)
+                    );
+
+
+                    setpoint.push(
+                        Number(item.setpoint)
+                    );
+
+                });
+
+
+            atualizarGrafico(
+                labels,
+                tempIn,
+                tempOut,
+                setpoint
+            );
+
+        });
+
+}
+
+
+
+// ========================================
+// Criação do gráfico
+// ========================================
+
+function atualizarGrafico(
+    labels,
+    tempIn,
+    tempOut,
+    setpoint
+) {
+
+
+    const ctx =
+        document.getElementById("chart_div");
+
+
+    if (chart)
+        chart.destroy();
+
+
+
+    chart = new Chart(ctx, {
+
+        type: "line",
+
+        data: {
+
+            labels: labels,
+
+            datasets: [
+
+                {
+                    label: "Temp. Interna",
+                    data: tempIn,
+                    tension: 0.3
+                },
+
+                {
+                    label: "Temp. Externa",
+                    data: tempOut,
+                    tension: 0.3
+                },
+
+                {
+                    label: "Setpoint",
+                    data: setpoint,
+                    tension: 0.3
+                }
+
+            ]
+
+        },
+
+
+        options: {
+
+            responsive: true,
+
+            maintainAspectRatio: false,
+
+
+            scales: {
+
+                y: {
+
+                    title: {
+
+                        display: true,
+
+                        text: "Temperatura °C"
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    });
+
+}
+
+
+
+// ========================================
+// Funções auxiliares
+// ========================================
+
+function formatarNumero(valor) {
+
+    if (valor === undefined || valor === null)
+        return "";
+
+    return Number(valor).toFixed(1);
+
+}
+
+
+
+// Inicia quando o Chart.js estiver carregado
+
+window.onload = () => {
+
+    iniciarFirebase();
+
+};
