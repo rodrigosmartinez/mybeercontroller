@@ -16,7 +16,23 @@ body { font-family: Arial; background: #111; color: white; text-align: center; }
     font-size: 16px;
 }
 
-#chart_div { height: 400px; background: #fff; border-radius: 15px; margin-bottom: 80px; overflow: hidden; }
+button {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    padding: 10px 30px;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+#chart_div {
+    height: 400px;
+    background: #fff;
+    border-radius: 15px;
+    margin-top: 40px;
+    margin-bottom: 80px;
+    overflow: hidden;
+}
 
 .info-section { display: flex; align-items: flex-start; justify-content: center; gap: 30px; margin-top: 20px; color: white; }
 .info-section img { width: 700px; border-radius: 10px; }
