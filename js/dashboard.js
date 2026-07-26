@@ -1,7 +1,7 @@
 // ========================================
 // Inicialização do Firebase
 // ========================================
-
+alert("dashboard.js versão nova carregada");
 function iniciarFirebase() {
 
     // Histórico para o gráfico
