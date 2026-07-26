@@ -9,8 +9,18 @@ function enviarParametros() {
         stirrer: Number(document.getElementById("stirrer").value),
         timestamp: Date.now()
     };
+    
+    const confirmar = confirm(
+        "Confirme os valores antes de enviar:\n\n" +
+        JSON.stringify(dados, null, 2)
+    );
 
-    alert(JSON.stringify(dados, null, 2));
+    if (!confirmar) {
+
+        alert("Envio cancelado.");
+
+        return;
+    }
 
     db.ref("comandos")
         .set(dados)
