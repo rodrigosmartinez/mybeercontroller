@@ -37,6 +37,18 @@ function iniciarFirebase() {
 
 function atualizarCards(last) {
 
+    
+    function atualizarInput(id, valor) {
+    
+        const input = document.getElementById(id);
+    
+        // Não atualiza se o usuário estiver editando este campo
+        if (document.activeElement === input)
+            return;
+    
+        input.value = valor;
+    }
+    
     function f1(v){ return (v !== undefined) ? parseFloat(v).toFixed(1) : ""; }
     function f0(v){ return (v !== undefined) ? parseInt(v) : ""; }
 
@@ -51,11 +63,11 @@ function atualizarCards(last) {
     else if (status === "AQUECENDO") el.style.color = "#ff4d4d";
     else el.style.color = "#ccc";
 
-    document.getElementById("setpoint").value = f1(last[3]);
-    document.getElementById("hysterese").value = f1(last[4]);
-    document.getElementById("timedelay").value = f0(last[6]);
-    document.getElementById("ontime").value = f0(last[7]);
-    document.getElementById("offtime").value = f0(last[8]);
+    atualizarInput("setpoint", f1(last[3]));
+    atualizarInput("hysterese", f1(last[4]));
+    atualizarInput("timedelay", f0(last[6]));
+    atualizarInput("ontime", f0(last[7]));
+    atualizarInput("offtime", f0(last[8]));
 
     document.getElementById("temp_in").value = f1(last[2]) + " °C";
     document.getElementById("temp_out").value = f1(last[1]) + " °C";
