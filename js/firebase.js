@@ -1,3 +1,5 @@
+alert("firebase.js carregou");
+
 const firebaseConfig = {
   apiKey: "AIzaSyBcqFW9oxAxYNfzPpy01UC7XcCZi4rZR1Q",
   authDomain: "meuprojetoiot-c9370.firebaseapp.com",
