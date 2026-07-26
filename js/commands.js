@@ -6,8 +6,7 @@ function enviarParametros() {
         timedelay: Number(document.getElementById("timedelay").value),
         ontime: Number(document.getElementById("ontime").value),
         offtime: Number(document.getElementById("offtime").value),
-        stirrer: Number(document.getElementById("stirrer").value),
-        timestamp: Date.now()
+        stirrer: Number(document.getElementById("stirrer").value)
     };
     
     const confirmar = confirm(
