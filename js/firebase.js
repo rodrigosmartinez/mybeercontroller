@@ -7,14 +7,3 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-
-console.log("Firebase inicializado");
-
-db.ref(".info/connected").on("value", function(snapshot) {
-
-    if (snapshot.val() === true)
-        alert("Site conectado ao Firebase");
-
-    else
-        alert("Site desconectado");
-});
