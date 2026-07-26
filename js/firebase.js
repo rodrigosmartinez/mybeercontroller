@@ -1,5 +1,3 @@
-alert("firebase.js carregou");
-document.body.style.background = "red";
 const firebaseConfig = {
   apiKey: "AIzaSyBcqFW9oxAxYNfzPpy01UC7XcCZi4rZR1Q",
   authDomain: "meuprojetoiot-c9370.firebaseapp.com",
