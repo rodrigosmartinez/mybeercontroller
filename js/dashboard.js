@@ -1,13 +1,24 @@
+// ========================================
+// MyBeerController Dashboard
+// ========================================
+
 function iniciarFirebase() {
 
-    // Gráfico - vem do /historico
+
+    // ====================================
+    // Gráfico - dados do /historico
+    // ====================================
+
     db.ref("historico").limitToLast(50).on("value", snapshot => {
 
         const data = snapshot.val();
 
-        if (!data) return;
+        if (!data)
+            return;
+
 
         let history = [];
+
 
         Object.keys(data).sort().forEach(key => {
 
@@ -16,6 +27,7 @@ function iniciarFirebase() {
             let date = new Date(
                 item.timestamp || Date.now()
             );
+
 
             let hora =
                 date.getHours() + ":" +
@@ -32,9 +44,156 @@ function iniciarFirebase() {
 
         });
 
+
         drawChart(history);
 
     });
+
+
+
+    // ====================================
+    // Cards - dados do /status
+    // ====================================
+
+    db.ref("status").on("value", snapshot => {
+
+        const status = snapshot.val();
+
+
+        console.log("STATUS:", status);
+
+
+        if (!status)
+            return;
+
+
+        atualizarCards(status);
+
+    });
+
+}
+
+
+
+
+function atualizarCards(status) {
+
+
+    function decimal(valor) {
+
+        if (valor === undefined || valor === null)
+            return "";
+
+        return Number(valor).toFixed(1);
+    }
+
+
+    function inteiro(valor) {
+
+        if (valor === undefined || valor === null)
+            return "";
+
+        return parseInt(valor);
+    }
+
+
+
+    // Status controlador
+
+    let textoStatus = "STANDBY";
+
+
+    if (status.status_control == 1)
+
+        textoStatus = "REFRIGERANDO";
+
+
+    else if (status.status_control == 0)
+
+        textoStatus = "AQUECENDO";
+
+
+
+    const statusElement =
+        document.getElementById("status_control");
+
+
+    statusElement.innerText = textoStatus;
+
+
+
+    if (textoStatus === "REFRIGERANDO")
+
+        statusElement.style.color = "#00bfff";
+
+
+    else if (textoStatus === "AQUECENDO")
+
+        statusElement.style.color = "#ff4d4d";
+
+
+    else
+
+        statusElement.style.color = "#ccc";
+
+
+
+
+
+    // Valores dos comandos
+
+    document.getElementById("setpoint").value =
+        decimal(status.setpoint);
+
+
+    document.getElementById("hysterese").value =
+        decimal(status.hysterese);
+
+
+    document.getElementById("timedelay").value =
+        inteiro(status.timedelay);
+
+
+    document.getElementById("ontime").value =
+        inteiro(status.ontime);
+
+
+    document.getElementById("offtime").value =
+        inteiro(status.offtime);
+
+
+
+
+
+    // Temperaturas
+
+    document.getElementById("temp_in").value =
+        decimal(status.temp_in_filtered) + " °C";
+
+
+    document.getElementById("temp_out").value =
+        decimal(status.temp_out_filtered) + " °C";
+
+}
+
+
+
+
+// ========================================
+// Google Charts
+// ========================================
+
+google.charts.load("current", {
+    packages: [
+        "corechart",
+        "line"
+    ]
+});
+
+
+google.charts.setOnLoadCallback(
+    iniciarFirebase
+);    });
 
 
 
