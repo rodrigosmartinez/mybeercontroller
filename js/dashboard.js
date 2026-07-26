@@ -1,40 +1,334 @@
 // ========================================
-// Inicialização do Firebase
+// Dashboard MyBeerController
+// Leitura Firebase e atualização da tela
 // ========================================
-alert("dashboard.js versão nova carregada");
+
+
 function iniciarFirebase() {
 
-    // Histórico para o gráfico
-    db.ref("historico").limitToLast(50).on("value", snapshot => {
 
-        const data = snapshot.val();
-        if (!data) return;
+    // ====================================
+    // HISTÓRICO
+    // Usado somente para o gráfico
+    // ====================================
 
-        let history = [];
+    db.ref("historico")
+        .limitToLast(50)
+        .on("value", snapshot => {
 
-        Object.keys(data).sort().forEach(key => {
 
-            let item = data[key];
+            const data = snapshot.val();
 
-            let date = new Date(item.timestamp || Date.now());
 
-            let hora =
-                date.getHours() + ":" +
-                String(date.getMinutes()).padStart(2, "0");
+            if (!data)
+                return;
 
-            history.push([
-                hora,
-                item.temp_out_filtered,
-                item.temp_in_filtered,
-                item.setpoint,
-                item.hysterese
-            ]);
+
+            let history = [];
+
+
+            Object.keys(data)
+                .sort()
+                .forEach(key => {
+
+
+                    let item = data[key];
+
+
+                    let date = new Date(
+                        item.timestamp || Date.now()
+                    );
+
+
+                    let hora =
+                        date.getHours() +
+                        ":" +
+                        String(date.getMinutes())
+                            .padStart(2, "0");
+
+
+
+                    history.push([
+
+                        hora,
+
+                        Number(item.temp_out_filtered),
+                        Number(item.temp_in_filtered),
+
+                        Number(item.setpoint),
+                        Number(item.hysterese)
+
+                    ]);
+
+                });
+
+
+
+            drawChart(history);
+
+
         });
 
-        drawChart(history);
-    });
 
 
+
+
+    // ====================================
+    // STATUS ATUAL
+    // Usado nas caixas de texto
+    // ====================================
+
+    db.ref("status")
+        .on("value", snapshot => {
+
+
+            const status = snapshot.val();
+
+
+
+            if (!status)
+                return;
+
+
+
+            console.log("STATUS RECEBIDO:");
+            console.log(status);
+
+
+
+            atualizarCards(status);
+
+
+        });
+
+
+}
+
+
+
+
+
+
+// ========================================
+// Atualiza os valores da tela
+// Recebe dados do /status
+// ========================================
+
+function atualizarCards(status) {
+
+
+
+    function atualizarInput(id, valor) {
+
+
+        const input =
+            document.getElementById(id);
+
+
+
+        if (!input)
+            return;
+
+
+
+        // Não altera enquanto usuário digita
+        if (document.activeElement === input)
+            return;
+
+
+
+        input.value = valor;
+
+    }
+
+
+
+
+
+    function decimal(valor) {
+
+
+        if (valor === undefined ||
+            valor === null)
+            return "";
+
+
+        return Number(valor)
+            .toFixed(1);
+
+    }
+
+
+
+
+
+    function inteiro(valor) {
+
+
+        if (valor === undefined ||
+            valor === null)
+            return "";
+
+
+        return parseInt(valor);
+
+    }
+
+
+
+
+
+    // ====================================
+    // STATUS DO CONTROLADOR
+    // ====================================
+
+
+    let textoStatus = "STANDBY";
+
+
+
+    if (status.status_control == 1)
+
+        textoStatus = "REFRIGERANDO";
+
+
+    else if (status.status_control == 0)
+
+        textoStatus = "AQUECENDO";
+
+
+
+
+
+    let elemento =
+        document.getElementById("status_control");
+
+
+
+    if (elemento) {
+
+
+        elemento.innerText = textoStatus;
+
+
+
+        if (textoStatus === "REFRIGERANDO")
+
+            elemento.style.color = "#00bfff";
+
+
+        else if (textoStatus === "AQUECENDO")
+
+            elemento.style.color = "#ff4d4d";
+
+
+        else
+
+            elemento.style.color = "#ccc";
+
+
+    }
+
+
+
+
+
+
+
+    // ====================================
+    // CAMPOS DE COMANDO
+    // Fonte: /status
+    // ====================================
+
+
+    atualizarInput(
+        "setpoint",
+        decimal(status.setpoint)
+    );
+
+
+    atualizarInput(
+        "hysterese",
+        decimal(status.hysterese)
+    );
+
+
+    atualizarInput(
+        "timedelay",
+        inteiro(status.timedelay)
+    );
+
+
+    atualizarInput(
+        "ontime",
+        inteiro(status.ontime)
+    );
+
+
+    atualizarInput(
+        "offtime",
+        inteiro(status.offtime)
+    );
+
+
+
+
+
+
+    // ====================================
+    // Temperaturas atuais
+    // ====================================
+
+
+    let tempIn =
+        document.getElementById("temp_in");
+
+
+    if (tempIn)
+
+        tempIn.value =
+            decimal(status.temp_in_filtered)
+            + " °C";
+
+
+
+
+    let tempOut =
+        document.getElementById("temp_out");
+
+
+    if (tempOut)
+
+        tempOut.value =
+            decimal(status.temp_out_filtered)
+            + " °C";
+
+
+}
+
+
+
+
+
+
+// ========================================
+// Google Charts
+// ========================================
+
+google.charts.load(
+    "current",
+    {
+        packages: [
+            "corechart",
+            "line"
+        ]
+    }
+);
+
+
+google.charts.setOnLoadCallback(
+    iniciarFirebase
+);
     // Status atual para os campos da tela
     db.ref("status").on("value", snapshot => {
 
