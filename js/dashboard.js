@@ -190,7 +190,7 @@ function atualizarGrafico(
 
 
     const ctx =
-        document.getElementById("chart_div");
+        document.getElementById("grafico");
 
 
     if (chart)
