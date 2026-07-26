@@ -1,20 +1,14 @@
-// ========================================
-// MyBeerController Dashboard
-// ========================================
-alert("dashboard.js carregou"); 
 function iniciarFirebase() {
 
-
-    // ====================================
-    // Gráfico - dados do /historico
-    // ====================================
+    // ================================
+    // Gráfico - origem /historico
+    // ================================
 
     db.ref("historico").limitToLast(50).on("value", snapshot => {
 
         const data = snapshot.val();
 
-        if (!data)
-            return;
+        if (!data) return;
 
 
         let history = [];
@@ -22,19 +16,161 @@ function iniciarFirebase() {
 
         Object.keys(data).sort().forEach(key => {
 
-            let item = data[key];
+            const item = data[key];
 
-            let date = new Date(
+            const date = new Date(
                 item.timestamp || Date.now()
             );
 
-
-            let hora =
+            const hora =
                 date.getHours() + ":" +
                 String(date.getMinutes()).padStart(2, "0");
 
 
             history.push([
+                hora,
+                Number(item.temp_out_filtered),
+                Number(item.temp_in_filtered),
+                Number(item.setpoint),
+                Number(item.hysterese)
+            ]);
+
+        });
+
+
+        drawChart(history);
+
+    });
+
+
+
+    // ================================
+    // Cards - origem /status
+    // ================================
+
+    db.ref("status").on("value", snapshot => {
+
+        const status = snapshot.val();
+
+        console.log("STATUS:", status);
+
+
+        if (!status) return;
+
+
+        atualizarCards(status);
+
+    });
+
+}
+
+
+
+
+function atualizarCards(status) {
+
+
+    function f1(valor) {
+
+        return Number(valor).toFixed(1);
+
+    }
+
+
+    function f0(valor) {
+
+        return parseInt(valor);
+
+    }
+
+
+
+    // Status
+
+    let texto = "STANDBY";
+
+
+    if (status.status_control == 1)
+
+        texto = "REFRIGERANDO";
+
+
+    else if (status.status_control == 0)
+
+        texto = "AQUECENDO";
+
+
+
+    const statusBox =
+        document.getElementById("status_control");
+
+
+    statusBox.innerText = texto;
+
+
+
+    // Cores
+
+    if (texto == "REFRIGERANDO")
+
+        statusBox.style.color = "#00bfff";
+
+
+    else if (texto == "AQUECENDO")
+
+        statusBox.style.color = "#ff4d4d";
+
+
+    else
+
+        statusBox.style.color = "#ccc";
+
+
+
+
+
+    // Valores do /status
+
+    document.getElementById("setpoint").value =
+        f1(status.setpoint);
+
+
+    document.getElementById("hysterese").value =
+        f1(status.hysterese);
+
+
+    document.getElementById("timedelay").value =
+        f0(status.timedelay);
+
+
+    document.getElementById("ontime").value =
+        f0(status.ontime);
+
+
+    document.getElementById("offtime").value =
+        f0(status.offtime);
+
+
+
+
+    document.getElementById("temp_in").value =
+        f1(status.temp_in_filtered) + " °C";
+
+
+    document.getElementById("temp_out").value =
+        f1(status.temp_out_filtered) + " °C";
+
+}
+
+
+
+
+google.charts.load("current", {
+    packages: ["corechart", "line"]
+});
+
+
+google.charts.setOnLoadCallback(iniciarFirebase);            history.push([
                 hora,
                 Number(item.temp_out_filtered),
                 Number(item.temp_in_filtered),
