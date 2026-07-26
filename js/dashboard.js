@@ -1,40 +1,170 @@
 // ========================================
 // Dashboard MyBeerController
-// Leitura Firebase e atualização da tela
 // ========================================
-
 
 function iniciarFirebase() {
 
+    // Histórico para o gráfico
+    db.ref("historico").limitToLast(50).on("value", snapshot => {
 
-    // ====================================
-    // HISTÓRICO
-    // Usado somente para o gráfico
-    // ====================================
+        const data = snapshot.val();
+        if (!data) return;
 
-    db.ref("historico")
-        .limitToLast(50)
-        .on("value", snapshot => {
+        let history = [];
+
+        Object.keys(data).sort().forEach(key => {
+
+            let item = data[key];
+
+            let date = new Date(
+                item.timestamp || Date.now()
+            );
+
+            let hora =
+                date.getHours() + ":" +
+                String(date.getMinutes()).padStart(2, "0");
+
+            history.push([
+                hora,
+                Number(item.temp_out_filtered),
+                Number(item.temp_in_filtered),
+                Number(item.setpoint),
+                Number(item.hysterese)
+            ]);
+        });
+
+        drawChart(history);
+    });
 
 
-            const data = snapshot.val();
+    // Status atual para os campos da tela
+    db.ref("status").on("value", snapshot => {
+
+        const status = snapshot.val();
+
+        if (!status) return;
+
+        console.log("STATUS RECEBIDO:");
+        console.log(status);
+
+        atualizarCards(status);
+    });
+}
 
 
-            if (!data)
-                return;
+// ========================================
+// Atualiza os campos da tela
+// Dados vindos do /status
+// ========================================
+
+function atualizarCards(status) {
+
+    function atualizarInput(id, valor) {
+
+        const input = document.getElementById(id);
+
+        if (!input) return;
+
+        // Não sobrescreve enquanto usuário digita
+        if (document.activeElement === input)
+            return;
+
+        input.value = valor;
+    }
 
 
-            let history = [];
+    function decimal(valor) {
+
+        if (valor === undefined || valor === null)
+            return "";
+
+        return Number(valor).toFixed(1);
+    }
 
 
-            Object.keys(data)
-                .sort()
-                .forEach(key => {
+    function inteiro(valor) {
+
+        if (valor === undefined || valor === null)
+            return "";
+
+        return parseInt(valor);
+    }
 
 
-                    let item = data[key];
+    // Status do controlador
+    let textoStatus = "STANDBY";
+
+    if (status.status_control == 1)
+        textoStatus = "REFRIGERANDO";
+
+    else if (status.status_control == 0)
+        textoStatus = "AQUECENDO";
 
 
+    const elementoStatus =
+        document.getElementById("status_control");
+
+
+    if (elementoStatus) {
+
+        elementoStatus.innerText = textoStatus;
+
+        if (textoStatus === "REFRIGERANDO")
+            elementoStatus.style.color = "#00bfff";
+
+        else if (textoStatus === "AQUECENDO")
+            elementoStatus.style.color = "#ff4d4d";
+
+        else
+            elementoStatus.style.color = "#ccc";
+    }
+
+
+    // Valores atuais
+    atualizarInput(
+        "setpoint",
+        decimal(status.setpoint)
+    );
+
+    atualizarInput(
+        "hysterese",
+        decimal(status.hysterese)
+    );
+
+    atualizarInput(
+        "timedelay",
+        inteiro(status.timedelay)
+    );
+
+    atualizarInput(
+        "ontime",
+        inteiro(status.ontime)
+    );
+
+    atualizarInput(
+        "offtime",
+        inteiro(status.offtime)
+    );
+
+
+    // Temperaturas
+    document.getElementById("temp_in").value =
+        decimal(status.temp_in_filtered) + " °C";
+
+    document.getElementById("temp_out").value =
+        decimal(status.temp_out_filtered) + " °C";
+}
+
+
+// ========================================
+// Google Charts
+// ========================================
+
+google.charts.load("current", {
+    packages: ["corechart", "line"]
+});
+
+google.charts.setOnLoadCallback(iniciarFirebase);
                     let date = new Date(
                         item.timestamp || Date.now()
                     );
