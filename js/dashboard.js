@@ -57,8 +57,8 @@ function atualizarCards(last) {
     document.getElementById("ontime").value = f0(last[7]);
     document.getElementById("offtime").value = f0(last[8]);
 
-    document.getElementById("temp_in").innerText = f1(last[2]) + " °C";
-    document.getElementById("temp_out").innerText = f1(last[1]) + " °C";
+    document.getElementById("temp_in").value = f1(last[2]) + " °C";
+    document.getElementById("temp_out").value = f1(last[1]) + " °C";
 }
 
 
