@@ -1,66 +1,125 @@
+// ========================================
+// MyBeerController - Dashboard
+// ========================================
+
 function iniciarFirebase() {
 
-    db.ref('historico').limitToLast(50).on('value', snapshot => {
+    // Gráfico - dados do /historico
+    db.ref("historico").limitToLast(50).on("value", snapshot => {
 
         const data = snapshot.val();
         if (!data) return;
 
         let history = [];
-        let keys = Object.keys(data);
-        keys.sort();
 
-        for (let k of keys) {
-            let item = data[k];
+        Object.keys(data).sort().forEach(key => {
 
-            let date = new Date(item.timestamp || Date.now());
-            let hora = date.getHours() + ":" + String(date.getMinutes()).padStart(2, '0');
+            const item = data[key];
+            const date = new Date(item.timestamp || Date.now());
+
+            const hora =
+                date.getHours() + ":" +
+                String(date.getMinutes()).padStart(2, "0");
 
             history.push([
                 hora,
-                item.temp_out_filtered,
-                item.temp_in_filtered,
-                item.setpoint,
-                item.hysterese,
-                item.status_control,
-                item.timedelay,
-                item.ontime,
-                item.offtime
+                Number(item.temp_out_filtered),
+                Number(item.temp_in_filtered),
+                Number(item.setpoint),
+                Number(item.hysterese)
             ]);
-        }
+        });
 
-        let last = history[history.length - 1];
-
-        atualizarCards(last);
         drawChart(history);
+    });
+
+
+    // Cards - dados do /status
+    db.ref("status").on("value", snapshot => {
+
+        const status = snapshot.val();
+
+        console.log("STATUS RECEBIDO:", status);
+
+        if (!status) return;
+
+        atualizarCards(status);
     });
 }
 
-function atualizarCards(last) {
 
-    function f1(v){ return (v !== undefined) ? parseFloat(v).toFixed(1) : ""; }
-    function f0(v){ return (v !== undefined) ? parseInt(v) : ""; }
+// Atualiza os valores dos cards
 
-    let status = "STANDBY";
-    if (last[5] == 1) status = "REFRIGERANDO";
-    else if (last[5] == 0) status = "AQUECENDO";
+function atualizarCards(status) {
 
-    let el = document.getElementById("status_control");
-    el.innerText = status;
+    function decimal(valor) {
+        return (valor !== undefined && valor !== null)
+            ? Number(valor).toFixed(1)
+            : "";
+    }
 
-    if (status === "REFRIGERANDO") el.style.color = "#00bfff";
-    else if (status === "AQUECENDO") el.style.color = "#ff4d4d";
-    else el.style.color = "#ccc";
 
-    document.getElementById("setpoint").value = f1(last[3]);
-    document.getElementById("hysterese").value = f1(last[4]);
-    document.getElementById("timedelay").value = f0(last[6]);
-    document.getElementById("ontime").value = f0(last[7]);
-    document.getElementById("offtime").value = f0(last[8]);
+    function inteiro(valor) {
+        return (valor !== undefined && valor !== null)
+            ? parseInt(valor)
+            : "";
+    }
 
-    document.getElementById("temp_in").innerText = f1(last[2]) + " °C";
-    document.getElementById("temp_out").innerText = f1(last[1]) + " °C";
+
+    let textoStatus = "STANDBY";
+
+    if (status.status_control == 1)
+        textoStatus = "REFRIGERANDO";
+
+    else if (status.status_control == 0)
+        textoStatus = "AQUECENDO";
+
+
+    const statusElement = document.getElementById("status_control");
+
+    if (statusElement) {
+
+        statusElement.innerText = textoStatus;
+
+        if (textoStatus === "REFRIGERANDO")
+            statusElement.style.color = "#00bfff";
+
+        else if (textoStatus === "AQUECENDO")
+            statusElement.style.color = "#ff4d4d";
+
+        else
+            statusElement.style.color = "#ccc";
+    }
+
+
+    document.getElementById("setpoint").value =
+        decimal(status.setpoint);
+
+    document.getElementById("hysterese").value =
+        decimal(status.hysterese);
+
+    document.getElementById("timedelay").value =
+        inteiro(status.timedelay);
+
+    document.getElementById("ontime").value =
+        inteiro(status.ontime);
+
+    document.getElementById("offtime").value =
+        inteiro(status.offtime);
+
+
+    document.getElementById("temp_in").value =
+        decimal(status.temp_in_filtered) + " °C";
+
+    document.getElementById("temp_out").value =
+        decimal(status.temp_out_filtered) + " °C";
 }
 
 
-google.charts.load('current', {packages: ['corechart', 'line']});
+// Google Charts
+
+google.charts.load("current", {
+    packages: ["corechart", "line"]
+});
+
 google.charts.setOnLoadCallback(iniciarFirebase);
