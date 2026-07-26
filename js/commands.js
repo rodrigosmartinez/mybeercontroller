@@ -1,18 +1,23 @@
 function enviarParametros() {
 
     const dados = {
-        setpoint: parseFloat(document.getElementById("setpoint").value),
-        hysterese: parseFloat(document.getElementById("hysterese").value),
-        timedelay: parseInt(document.getElementById("timedelay").value),
-        ontime: parseInt(document.getElementById("ontime").value),
-        offtime: parseInt(document.getElementById("offtime").value),
-        stirrer: parseInt(document.getElementById("stirrer").value),
+        setpoint: Number(document.getElementById("setpoint").value),
+        hysterese: Number(document.getElementById("hysterese").value),
+        timedelay: Number(document.getElementById("timedelay").value),
+        ontime: Number(document.getElementById("ontime").value),
+        offtime: Number(document.getElementById("offtime").value),
+        stirrer: Number(document.getElementById("stirrer").value),
         timestamp: Date.now()
     };
 
-    console.log("Enviando:", dados);
+    alert(JSON.stringify(dados, null, 2));
 
-    firebase.database().ref("comandos").set(dados)
-        .then(() => alert("Enviado!"))
-        .catch(err => console.error(err));
+    db.ref("comandos")
+        .set(dados)
+        .then(() => {
+            alert("Enviado com sucesso!");
+        })
+        .catch((err) => {
+            alert("Erro:\n\n" + err.message);
+        });
 }
