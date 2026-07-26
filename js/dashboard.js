@@ -1,13 +1,10 @@
-// ========================================
-// Dashboard MyBeerController
-// ========================================
-
 function iniciarFirebase() {
 
-    // Histórico para o gráfico
+    // Gráfico - vem do /historico
     db.ref("historico").limitToLast(50).on("value", snapshot => {
 
         const data = snapshot.val();
+
         if (!data) return;
 
         let history = [];
@@ -24,6 +21,7 @@ function iniciarFirebase() {
                 date.getHours() + ":" +
                 String(date.getMinutes()).padStart(2, "0");
 
+
             history.push([
                 hora,
                 Number(item.temp_out_filtered),
@@ -31,10 +29,97 @@ function iniciarFirebase() {
                 Number(item.setpoint),
                 Number(item.hysterese)
             ]);
+
         });
 
         drawChart(history);
+
     });
+
+
+
+    // Cards - vem do /status
+    db.ref("status").on("value", snapshot => {
+
+
+        const status = snapshot.val();
+
+
+        alert(
+            "Dados recebidos do /status:\n\n" +
+            JSON.stringify(status, null, 2)
+        );
+
+
+        if (!status) return;
+
+
+        atualizarCards(status);
+
+    });
+
+}
+
+
+
+function atualizarCards(status) {
+
+
+    document.getElementById("setpoint").value =
+        status.setpoint;
+
+
+    document.getElementById("hysterese").value =
+        status.hysterese;
+
+
+    document.getElementById("timedelay").value =
+        status.timedelay;
+
+
+    document.getElementById("ontime").value =
+        status.ontime;
+
+
+    document.getElementById("offtime").value =
+        status.offtime;
+
+
+
+    document.getElementById("temp_in").value =
+        status.temp_in_filtered + " °C";
+
+
+    document.getElementById("temp_out").value =
+        status.temp_out_filtered + " °C";
+
+
+
+    let texto = "STANDBY";
+
+
+    if (status.status_control == 1)
+        texto = "REFRIGERANDO";
+
+
+    if (status.status_control == 0)
+        texto = "AQUECENDO";
+
+
+
+    document.getElementById("status_control").innerText =
+        texto;
+
+}
+
+
+
+google.charts.load("current", {
+    packages: ["corechart", "line"]
+});
+
+
+google.charts.setOnLoadCallback(iniciarFirebase);    });
 
 
     // Status atual para os campos da tela
