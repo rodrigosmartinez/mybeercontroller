@@ -1,7 +1,7 @@
 // ========================================
 // MyBeerController Dashboard
 // ========================================
-
+alert("dashboard.js carregou");
 function iniciarFirebase() {
 
 
