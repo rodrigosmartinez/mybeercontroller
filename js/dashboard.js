@@ -63,7 +63,11 @@ function atualizarCards(status) {
     document.getElementById("offtime").value =
         status.offtime;
 
+    
+    document.getElementById("stirrer").value =
+        status.stirrer;
 
+    
     document.getElementById("temp_in").value =
         formatarNumero(status.temp_in_filtered) + " °C";
 
