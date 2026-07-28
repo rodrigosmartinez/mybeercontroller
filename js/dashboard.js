@@ -23,22 +23,6 @@ function iniciarFirebase() {
 
 
 // Atualiza status wifi
-function carregarHeartbeat() {
-
-    db.ref("status/last_update").on("value", snapshot => {
-
-        ultimoHeartbeat = snapshot.val() || 0;
-
-        verificarHeartbeat(); // Atualiza imediatamente ao receber um valor
-
-    });
-
-    if (heartbeatTimer === null)
-        heartbeatTimer = setInterval(verificarHeartbeat, 1000);
-
-}
-
-
 function verificarHeartbeat() {
 
     const elemento = document.getElementById("controller_status");
