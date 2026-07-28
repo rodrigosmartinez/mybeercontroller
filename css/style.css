@@ -26,7 +26,7 @@ body {
     grid-template-columns: repeat(5, 150px);
     justify-content: center;
     gap: 10px;
-    margin-bottom: 20px;
+    margin-bottom: 40px;
 }
                                                 
 .card { 
