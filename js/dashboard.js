@@ -64,7 +64,7 @@ function verificarHeartbeat() {
     }
     else {
 
-        elemento.innerHTML = "🔴 Controlador desconectado (${formatarTempo(diff)})";
+        elemento.innerHTML = `🔴 Controlador desconectado (${formatarTempo(diff)})`;
 
         elemento.style.color = "#ff3333";
         
