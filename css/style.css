@@ -72,6 +72,11 @@ body {
     cursor: pointer;
 }
 
+.btn-enviar:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 #chart_div {
     height: 400px;
     background: #fff;
