@@ -46,6 +46,11 @@ body {
     font-weight: bold; 
 }
 
+#status_control {
+    font-size: 14px;
+    font-weight: bold;
+}
+
 .input-card {
     width: 90%;
     text-align: center;
