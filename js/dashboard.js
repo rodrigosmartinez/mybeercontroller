@@ -7,6 +7,7 @@ let chart;
 let ultimoHeartbeat = 0;
 let heartbeatTimer = null;
 let controladorConectado = true;
+let ultimoStatus = {};
 
 // Inicialização
 
@@ -88,7 +89,9 @@ function carregarStatus() {
 function atualizarCards(status) {
 
     ultimoHeartbeat = status.last_update || 0;
-    
+
+    ultimoStatus = { ...status };
+ 
     document.getElementById("setpoint").value =
         formatarNumero(status.setpoint);
 
