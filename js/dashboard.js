@@ -5,6 +5,7 @@
 
 let chart;
 
+let ultimoHeartbeat = 0;
 
 // Inicialização
 
@@ -14,8 +15,53 @@ function iniciarFirebase() {
 
     carregarStatus();
 
+    carregarHeartbeat();
+
 }
 
+
+// Atualiza status wifi
+function carregarHeartbeat() {
+
+    db.ref("controller/last_update").on("value", snapshot => {
+
+        ultimoHeartbeat = snapshot.val() || 0;
+
+    });
+
+    setInterval(verificarHeartbeat, 1000);
+
+}
+
+
+function verificarHeartbeat() {
+
+    const elemento = document.getElementById("controller_status");
+
+    if (!ultimoHeartbeat) {
+
+        elemento.innerHTML = "🟡 Verificando conexão...";
+        elemento.style.color = "#ffaa00";
+        return;
+
+    }
+
+    const agora = Math.floor(Date.now() / 1000);
+
+    if ((agora - ultimoHeartbeat) <= 30) {
+
+        elemento.innerHTML = "🟢 Controlador conectado";
+        elemento.style.color = "#00cc44";
+
+    }
+    else {
+
+        elemento.innerHTML = "🔴 Controlador desconectado";
+        elemento.style.color = "#ff3333";
+
+    }
+
+}
 
 // ========================================
 // Cards
