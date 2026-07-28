@@ -1,5 +1,18 @@
-body { font-family: Arial; background: #111; color: white; text-align: center; }
-.container { width: 1000px; margin: auto; }
+* {
+    box-sizing: border-box;
+}
+
+body { 
+    font-family: Arial; 
+    background: #111; 
+    color: white; 
+    text-align: center; 
+}
+
+.container { 
+    width: 1000px; 
+    margin: auto; 
+}
 
 .controller-status {
     text-align: center;
@@ -29,7 +42,7 @@ body { font-family: Arial; background: #111; color: white; text-align: center; }
 }
 
 .value { 
-    ont-size: 18px; 
+    font-size: 18px; 
     font-weight: bold; 
 }
 
@@ -47,9 +60,6 @@ body { font-family: Arial; background: #111; color: white; text-align: center; }
 .button-card {
     grid-column: 5;
     grid-row: 2;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 .btn-enviar {
