@@ -69,4 +69,4 @@ function enviarParametros() {
             alert("Erro ao enviar parâmetros:\n" + erro.message);
         });
 
-}
+} 
