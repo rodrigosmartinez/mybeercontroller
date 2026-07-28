@@ -16,9 +16,22 @@ body { font-family: Arial; background: #111; color: white; text-align: center; }
     margin-bottom: 20px;
 }
                                                 
-.card { background: #222; padding: 15px; border-radius: 10px; width: 150px; }
-.card div:first-child { font-size: 12px; color: #bbb; }
-.value { font-size: 18px; font-weight: bold; }
+.card { 
+    background: #222; 
+    padding: 15px; 
+    border-radius: 10px; 
+    width: 150px; 
+}
+
+.card div:first-child { 
+    font-size: 12px; 
+    color: #bbb; 
+}
+
+.value { 
+    ont-size: 18px; 
+    font-weight: bold; 
+}
 
 .input-card {
     width: 90%;
