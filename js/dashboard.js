@@ -2,7 +2,7 @@
 // MyBeerController Dashboard
 // Firebase + Chart.js
 // ========================================
-
+ 
 let chart;
 let ultimoHeartbeat = 0;
 let heartbeatTimer = null;
