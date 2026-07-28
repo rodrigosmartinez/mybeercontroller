@@ -60,7 +60,7 @@ function enviarParametros() {
         return;
 
     // Envia somente os parâmetros alterados
-    db.ref("commands")
+    db.ref("comandos")
         .update(dados)
         .then(() => {
             alert("Parâmetros enviados com sucesso.");
