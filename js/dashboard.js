@@ -4,7 +4,7 @@
 // ========================================
 
 let chart;
-
+let ultimoHeartbeat = 0;
 let heartbeatTimer = null;
 
 // Inicialização
@@ -15,7 +15,8 @@ function iniciarFirebase() {
 
     carregarStatus();
 
-    carregarHeartbeat();
+    if (heartbeatTimer === null)
+        heartbeatTimer = setInterval(verificarHeartbeat, 1000);
 
 }
 
@@ -84,7 +85,6 @@ function carregarStatus() {
         if (!status)
             return;
 
-
         atualizarCards(status);
 
     });
@@ -96,7 +96,8 @@ function carregarStatus() {
 
 function atualizarCards(status) {
 
-
+    ultimoHeartbeat = status.last_update || 0;
+    
     document.getElementById("setpoint").value =
         formatarNumero(status.setpoint);
 
