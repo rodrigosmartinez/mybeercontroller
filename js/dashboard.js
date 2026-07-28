@@ -64,10 +64,8 @@ function verificarHeartbeat() {
     }
     else {
 
-        const segundos = Math.floor(diff / 1000);
-
         elemento.innerHTML =
-            `🔴 Controlador desconectado (${segundos}s)`;
+            `🔴 Controlador desconectado (${formatarTempo(diff)})`;
 
         elemento.style.color = "#ff3333";
         
@@ -369,7 +367,22 @@ function formatarNumero(valor) {
 
 }
 
+function formatarTempo(ms) {
 
+    const totalSegundos = Math.floor(ms / 1000);
+
+    const dias = Math.floor(totalSegundos / 86400);
+    const horas = Math.floor((totalSegundos % 86400) / 3600);
+    const minutos = Math.floor((totalSegundos % 3600) / 60);
+    const segundos = totalSegundos % 60;
+
+    const hh = String(horas).padStart(2, "0");
+    const mm = String(minutos).padStart(2, "0");
+    const ss = String(segundos).padStart(2, "0");
+
+    return `${dias}d ${hh}:${mm}:${ss}`;
+
+}
 
 // Inicia quando o Chart.js estiver carregado
 
