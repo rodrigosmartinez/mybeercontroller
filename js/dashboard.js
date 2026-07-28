@@ -379,7 +379,7 @@ function formatarTempo(ms) {
     const mm = String(minutos).padStart(2, "0");
     const ss = String(segundos).padStart(2, "0");
 
-    return "${dias}d ${hh}:${mm}:${ss}";
+    return `${dias}d ${hh}:${mm}:${ss}`;
 
 }
 
