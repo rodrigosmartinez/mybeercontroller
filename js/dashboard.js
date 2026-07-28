@@ -138,7 +138,7 @@ function atualizarCards(status) {
         texto = "REFRIGERANDO";
 
 
-    else if (status.status_control == 0)
+    else if (status.status_control == 2)
         texto = "AQUECENDO";
 
 
