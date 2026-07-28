@@ -31,12 +31,6 @@
 
 
 <div class="card">
-<div>Status</div>
-<div id="status_control" class="value">--</div>
-</div>
-
-
-<div class="card">
 <div>Setpoint</div>
 <input id="setpoint" class="input-card">
 </div>
@@ -59,7 +53,13 @@
 <input id="stirrer" class="input-card">
 </div>
 
-  
+
+<div class="card">
+<div>Status</div>
+<div id="status_control" class="value">--</div>
+</div>
+
+    
 <div class="card">
 <div>Histerese</div>
 <input id="hysterese" class="input-card">
@@ -83,14 +83,14 @@
 <input id="offtime" class="input-card">
 </div>
 
-
-</div>
-
-
-
+<div class="card button-card">
 <button class="btn-enviar" onclick="enviarParametros()">
 Enviar
 </button>
+</div>
+
+    
+</div>
 
 
 <div id="chart_div">
