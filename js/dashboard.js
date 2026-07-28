@@ -6,6 +6,7 @@
 let chart;
 let ultimoHeartbeat = 0;
 let heartbeatTimer = null;
+let controladorConectado = true;
 
 // Inicialização
 
@@ -57,6 +58,9 @@ function verificarHeartbeat() {
         elemento.innerHTML = "🟢 Controlador conectado";
         elemento.style.color = "#00cc44";
 
+        controladorConectado = true;
+        habilitarBotao(true);
+
     }
     else {
 
@@ -66,7 +70,13 @@ function verificarHeartbeat() {
             `🔴 Controlador desconectado (${segundos}s)`;
 
         elemento.style.color = "#ff3333";
-
+        
+        if (controladorConectado) {
+            controladorConectado = false;
+            limparCards();
+            habilitarBotao(false);
+        }
+        
     }
 
 }
@@ -318,7 +328,33 @@ function atualizarGrafico(
 
 }
 
+// ========================================
+// Limpar cards
+// ========================================
 
+function limparCards() {
+
+    document.getElementById("setpoint").value = "--";
+    document.getElementById("hysterese").value = "--";
+    document.getElementById("timedelay").value = "--";
+    document.getElementById("ontime").value = "--";
+    document.getElementById("offtime").value = "--";
+    document.getElementById("stirrer").value = "--";
+    document.getElementById("temp_in").value = "--";
+    document.getElementById("temp_out").value = "--";
+
+    document.getElementById("status_control").innerHTML = "--";
+    document.getElementById("status_control").style.color = "#ccc";
+
+}
+
+function habilitarBotao(habilitado) {
+
+    const botao = document.getElementById("btn_enviar");
+
+    botao.disabled = !habilitado;
+
+}
 
 // ========================================
 // Funções auxiliares
