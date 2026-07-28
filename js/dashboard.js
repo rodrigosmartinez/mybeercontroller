@@ -23,7 +23,7 @@ function iniciarFirebase() {
 // Atualiza status wifi
 function carregarHeartbeat() {
 
-    db.ref("controller/last_update").on("value", snapshot => {
+    db.ref("status/last_update").on("value", snapshot => {
 
         ultimoHeartbeat = snapshot.val() || 0;
 
