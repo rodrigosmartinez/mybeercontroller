@@ -48,7 +48,7 @@ function verificarHeartbeat() {
     }
     else {
 
-        elemento.innerHTML = `🔴 Controlador desconectado (${formatarTempo(diff)})`;
+        elemento.innerHTML = `🔴 Controlador desconectado há ${formatarTempo(diff)}`;
 
         elemento.style.color = "#ff3333";
         
@@ -363,7 +363,7 @@ function formatarTempo(ms) {
     const mm = String(minutos).padStart(2, "0");
     const ss = String(segundos).padStart(2, "0");
 
-    return `${dias}d ${hh}:${mm}:${ss}`;
+    return `${dias}d ${hh}h ${mm}m ${ss}s`;
 
 }
 
