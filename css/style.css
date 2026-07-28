@@ -49,6 +49,8 @@ body {
 #status_control {
     font-size: 16px;
     font-weight: bold;
+    text-align: center;
+    margin-top: 15px;
 }
 
 .input-card {
@@ -71,7 +73,7 @@ body {
 .btn-enviar {
     width: 100%;
     height: 32px;
-    margin-top: 18px;
+    margin-top: 15px;
     border-radius: 5px;
     font-size: 16px;
     cursor: pointer;
@@ -87,7 +89,7 @@ body {
     background: #fff;
     border-radius: 15px;
     margin-top: 20px;
-    margin-bottom: 80px;
+    margin-bottom: 40px;
     overflow: hidden;
 }
 
