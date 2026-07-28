@@ -5,7 +5,7 @@
 
 let chart;
 
-let ultimoHeartbeat = 0;
+let heartbeatTimer = null;
 
 // Inicialização
 
@@ -27,9 +27,12 @@ function carregarHeartbeat() {
 
         ultimoHeartbeat = snapshot.val() || 0;
 
+        verificarHeartbeat(); // Atualiza imediatamente ao receber um valor
+
     });
 
-    setInterval(verificarHeartbeat, 1000);
+    if (heartbeatTimer === null)
+        heartbeatTimer = setInterval(verificarHeartbeat, 1000);
 
 }
 
@@ -46,9 +49,9 @@ function verificarHeartbeat() {
 
     }
 
-    const agora = Math.floor(Date.now() / 1000);
+    const diff = Date.now() - ultimoHeartbeat;
 
-    if ((agora - ultimoHeartbeat) <= 30) {
+    if (diff <= 30000) {
 
         elemento.innerHTML = "🟢 Controlador conectado";
         elemento.style.color = "#00cc44";
@@ -56,7 +59,11 @@ function verificarHeartbeat() {
     }
     else {
 
-        elemento.innerHTML = "🔴 Controlador desconectado";
+        const segundos = Math.floor(diff / 1000);
+
+        elemento.innerHTML =
+            `🔴 Controlador desconectado (${segundos}s)`;
+
         elemento.style.color = "#ff3333";
 
     }
