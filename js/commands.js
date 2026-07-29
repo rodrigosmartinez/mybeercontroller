@@ -40,6 +40,10 @@ function enviarParametros() {
 
     // Stirrer
     const stirrer = Number(document.getElementById("stirrer").value);
+    if (stirrer < 0 || stirrer > 10) {
+        alert("O valor do Stirrer deve estar entre 0 e 10.");
+        return;
+    }
     if (stirrer !== Number(ultimoStatus.stirrer)) {
         dados.stirrer = stirrer;
         alteracoes.push(`• Stirrer: ${ultimoStatus.stirrer} → ${stirrer}`);
