@@ -83,58 +83,53 @@ function carregarStatus() {
 }
 
 // Atualiza os cards
+function atualizarCards(status) {
 
+    ultimoHeartbeat = status.last_update || 0;
+    ultimoStatus = { ...status };
 
-function atualizarCards(status) { 
- 
-   ultimoHeartbeat = status.last_update || 0; 
-   ultimoStatus = { ...status }; 
-   
-   document.getElementById("setpoint").value = 
-    formatarNumero(status.setpoint); 
-   
-   document.getElementById("hysterese").value = 
-    formatarNumero(status.hysterese); 
-   
-   document.getElementById("timedelay").value = 
-    status.timedelay; 
-   
-   document.getElementById("ontime").value = 
-    status.ontime; 
-   
-   document.getElementById("offtime").value = 
-    status.offtime; 
-   
-   document.getElementById("stirrer").value = 
-    status.stirrer; 
-   
-   document.getElementById("temp_in").value = 
-    formatarNumero(status.temp_in_filtered) + " °C"; 
-   
-   document.getElementById("temp_out").value = 
-    formatarNumero(status.temp_out_filtered) + " °C"; 
-   
-   let texto = "STANDBY"; 
-   
-   if (status.status_control == 1) 
-    texto = "REFRIGERANDO"; 
-   
-   else if (status.status_control == 2) 
-    texto = "AQUECENDO"; 
-   
-   document.getElementById("status_control").innerText = 
-    texto; 
-   
-   const elemento = 
-    document.getElementById("status_control"); 
-   
-   if (texto === "REFRIGERANDO") 
-    elemento.style.color = "#00bfff"; 
-   
-   else if (texto === "AQUECENDO") 
-    elemento.style.color = "#ff4d4d"; 
-   
-   else elemento.style.color = "#ccc"; 
+    document.getElementById("setpoint").value =
+        formatarNumero(status.setpoint);
+
+    document.getElementById("hysterese").value =
+        formatarNumero(status.hysterese);
+
+    document.getElementById("timedelay").value =
+        status.timedelay;
+
+    document.getElementById("ontime").value =
+        status.ontime;
+
+    document.getElementById("offtime").value =
+        status.offtime;
+
+    document.getElementById("stirrer").value =
+        status.stirrer;
+
+    document.getElementById("temp_in").value =
+        `${formatarNumero(status.temp_in_filtered)} °C`;
+
+    document.getElementById("temp_out").value =
+        `${formatarNumero(status.temp_out_filtered)} °C`;
+
+    let texto = "STANDBY";
+
+    if (status.status_control == 1)
+        texto = "REFRIGERANDO";
+    else if (status.status_control == 2)
+        texto = "AQUECENDO";
+
+    document.getElementById("status_control").innerText =
+        texto;
+
+    const elemento = document.getElementById("status_control");
+
+    if (texto === "REFRIGERANDO")
+        elemento.style.color = "#00bfff";
+    else if (texto === "AQUECENDO")
+        elemento.style.color = "#ff4d4d";
+    else
+        elemento.style.color = "#ccc";
 
 }
 
