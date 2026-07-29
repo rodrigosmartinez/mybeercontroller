@@ -7,7 +7,6 @@ let chart;
 let ultimoHeartbeat = 0;
 let heartbeatTimer = null;
 let controladorConectado = true;
-let ultimoStatus = {};
 
 // Inicialização
 
@@ -70,84 +69,152 @@ function verificarHeartbeat() {
 
 function carregarStatus() {
 
-    db.ref("status").on("value", snapshot => {
+    const ref = db.ref("status");
 
-        const status = snapshot.val();
+    ref.on("child_added", snapshot => {
 
-        if (!status)
-            return;
+        atualizarCampoIndividual(
+            snapshot.key,
+            snapshot.val()
+        );
 
-        atualizarCards(status);
+    });
+
+    ref.on("child_changed", snapshot => {
+
+        atualizarCampoIndividual(
+            snapshot.key,
+            snapshot.val()
+        );
 
     });
 
 }
 
+// Carregar status
+function atualizarCampo(id, valor) {
 
-// Atualiza os cards
+    const elemento = document.getElementById(id);
 
-function atualizarCards(status) {
+    if (elemento.value != valor)
+        elemento.value = valor;
 
-    ultimoHeartbeat = status.last_update || 0;
+}
 
-    ultimoStatus = { ...status };
- 
-    document.getElementById("setpoint").value =
-        formatarNumero(status.setpoint);
+function atualizarTexto(id, texto) {
 
+    const elemento = document.getElementById(id);
 
-    document.getElementById("hysterese").value =
-        formatarNumero(status.hysterese);
+    if (elemento.innerText != texto)
+        elemento.innerText = texto;
 
-
-    document.getElementById("timedelay").value =
-        status.timedelay;
-
-
-    document.getElementById("ontime").value =
-        status.ontime;
+}
 
 
-    document.getElementById("offtime").value =
-        status.offtime;
+function atualizarCampoIndividual(chave, valor) {
 
-    
-    document.getElementById("stirrer").value =
-        status.stirrer;
+    switch (chave) {
 
-    
-    document.getElementById("temp_in").value =
-        formatarNumero(status.temp_in_filtered) + " °C";
+        case "last_update":
 
+            ultimoHeartbeat = valor;
+            break;
 
-    document.getElementById("temp_out").value =
-        formatarNumero(status.temp_out_filtered) + " °C";
+        case "setpoint":
 
+            atualizarCampo(
+                "setpoint",
+                formatarNumero(valor)
+            );
+            break;
 
+        case "hysterese":
+
+            atualizarCampo(
+                "hysterese",
+                formatarNumero(valor)
+            );
+            break;
+
+        case "timedelay":
+
+            atualizarCampo(
+                "timedelay",
+                valor
+            );
+            break;
+
+        case "ontime":
+
+            atualizarCampo(
+                "ontime",
+                valor
+            );
+            break;
+
+        case "offtime":
+
+            atualizarCampo(
+                "offtime",
+                valor
+            );
+            break;
+
+        case "stirrer":
+
+            atualizarCampo(
+                "stirrer",
+                valor
+            );
+            break;
+
+        case "temp_in_filtered":
+
+            atualizarCampo(
+                "temp_in",
+                formatarNumero(valor) + " °C"
+            );
+            break;
+
+        case "temp_out_filtered":
+
+            atualizarCampo(
+                "temp_out",
+                formatarNumero(valor) + " °C"
+            );
+            break;
+
+        case "status_control":
+
+            atualizarStatusControle(valor);
+            break;
+
+    }
+
+}
+
+function atualizarStatusControle(status) {
 
     let texto = "STANDBY";
 
-
-    if (status.status_control == 1)
+    if (status == 1)
         texto = "REFRIGERANDO";
 
-
-    else if (status.status_control == 2)
+    else if (status == 2)
         texto = "AQUECENDO";
 
-
-    document.getElementById("status_control").innerText =
-        texto;
-
+    atualizarTexto(
+        "status_control",
+        texto
+    );
 
     const elemento =
         document.getElementById("status_control");
 
-
-    if (texto === "REFRIGERANDO")
+    if (texto == "REFRIGERANDO")
         elemento.style.color = "#00bfff";
 
-    else if (texto === "AQUECENDO")
+    else if (texto == "AQUECENDO")
         elemento.style.color = "#ff4d4d";
 
     else
