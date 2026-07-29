@@ -7,6 +7,7 @@ let chart;
 let ultimoHeartbeat = 0;
 let heartbeatTimer = null;
 let controladorConectado = true;
+let ultimoStatus = {};
 
 // Inicialização
 
@@ -119,6 +120,8 @@ function atualizarTexto(id, texto) {
 
 function atualizarCampoIndividual(chave, valor) {
 
+    ultimoStatus[chave] = valor;
+ 
     switch (chave) {
 
         case "last_update":
