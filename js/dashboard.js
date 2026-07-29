@@ -71,12 +71,18 @@ function carregarStatus() {
 
     const ref = db.ref("status");
 
-    ref.on("child_added", snapshot => {
+    ref.once("value", snapshot => {
 
-        atualizarCampoIndividual(
-            snapshot.key,
-            snapshot.val()
-        );
+        const dados = snapshot.val();
+
+        if (!dados)
+            return;
+
+        Object.entries(dados).forEach(([chave, valor]) => {
+
+            atualizarCampoIndividual(chave, valor);
+
+        });
 
     });
 
