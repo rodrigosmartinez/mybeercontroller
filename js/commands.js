@@ -49,6 +49,22 @@ function enviarParametros() {
         alteracoes.push(`• Stirrer: ${ultimoStatus.stirrer} → ${stirrer}`);
     }
 
+    // SD Card
+    const sd_card = document.getElementById("sd_card").checked;
+    if (sd_card !== Boolean(ultimoStatus.sd_card)) {
+        dados.sd_card = sd_card;
+        alteracoes.push(`• SD Card: ${ultimoStatus.sd_card ? "ON" : "OFF"} → ${sd_card ? "ON" : "OFF"}`);
+    }
+
+    // Telegram
+    const telegram = document.getElementById("telegram").checked;
+    if (telegram !== Boolean(ultimoStatus.telegram)) {
+        dados.telegram_enabled = telegram;
+        alteracoes.push(`• Alerta Telegram: ${ultimoStatus.telegram ? "ON" : "OFF"} → ${telegram ? "ON" : "OFF"}`);
+    }
+
+
+    
     // Nada alterado
     if (Object.keys(dados).length === 0) {
         alert("Nenhum parâmetro foi alterado.");
@@ -73,29 +89,4 @@ function enviarParametros() {
             alert("Erro ao enviar parâmetros:\n" + erro.message);
         });
     
-    // SD Card
-    const sd_card = document.getElementById("sd_card").checked;
-    
-    if (sd_card !== Boolean(ultimoStatus.sd_card)) {
-    
-        dados.sd_card = sd_card;
-    
-        alteracoes.push(
-            `• SD Card: ${ultimoStatus.sd_card ? "ON" : "OFF"} → ${sd_card ? "ON" : "OFF"}`
-        );
-    
-    }
-
-    // Telegram
-    const telegram = document.getElementById("telegram").checked;
-    
-    if (telegram !== Boolean(ultimoStatus.telegram)) {
-    
-        dados.telegram_enabled = telegram;
-    
-        alteracoes.push(
-            `• Alerta Telegram: ${ultimoStatus.telegram ? "ON" : "OFF"} → ${telegram ? "ON" : "OFF"}`
-        );
-    
-    }
 } 
