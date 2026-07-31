@@ -132,20 +132,13 @@ function atualizarCards(status) {
         elemento.style.color = "#ccc";
 
     const sd = document.getElementById("sd_card");
-    const txt = document.getElementById("sd_card_text");
     
     sd.checked = !!status.sd_card;
-    
-    txt.innerHTML = sd.checked ? "ON" : "OFF";
-    txt.style.color = sd.checked ? "#00ff66" : "#ff4444";
 
     const telegram = document.getElementById("telegram");
-    const txt = document.getElementById("telegram_text");
     
     telegram.checked = !!status.telegram_enabled;
-    
-    txt.innerHTML = telegram.checked ? "ON" : "OFF";
-    txt.style.color = telegram.checked ? "#00ff66" : "#ff4444";
+
     
 }
 
