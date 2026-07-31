@@ -362,22 +362,10 @@ window.onload = () => {
 
     iniciarFirebase();
     
-    document.getElementById("sd_card").addEventListener("change", function () {
-    
-        const txt = document.getElementById("sd_card_text");
-    
-        txt.innerHTML = this.checked ? "ON" : "OFF";
-        txt.style.color = this.checked ? "#00ff66" : "#ff4444";
-    
-    });
+    document.getElementById("sd_card").checked =
+    !!status.telegram_enabled;
 
-    document.getElementById("telegram").addEventListener("change", function () {
-    
-        const txt = document.getElementById("telegram_text");
-    
-        txt.innerHTML = this.checked ? "ON" : "OFF";
-        txt.style.color = this.checked ? "#00ff66" : "#ff4444";
-    
-    });
+    document.getElementById("telegram").checked =
+    !!status.telegram_enabled;
     
 };
