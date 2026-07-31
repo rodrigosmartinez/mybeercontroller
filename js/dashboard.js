@@ -363,7 +363,7 @@ window.onload = () => {
     iniciarFirebase();
     
     document.getElementById("sd_card").checked =
-    !!status.telegram_enabled;
+    !!status.sd_card;
 
     document.getElementById("telegram").checked =
     !!status.telegram_enabled;
