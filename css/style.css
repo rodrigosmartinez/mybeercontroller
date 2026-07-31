@@ -64,6 +64,60 @@ body {
     font-size: 16px;
 }
 
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 54px;
+    height: 28px;
+    margin-top: 8px;
+}
+
+.switch input {
+    display: none;
+}
+
+.slider {
+    position: absolute;
+    inset: 0;
+    cursor: pointer;
+    background: #555;
+    transition: .3s;
+    border-radius: 28px;
+}
+
+.slider:before {
+    content: "";
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    transition: .3s;
+    border-radius: 50%;
+}
+
+.switch input:checked + .slider {
+    background: #00c853;
+}
+
+.switch input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+#sd_card_text{
+    margin-top:8px;
+    font-size:14px;
+    font-weight:bold;
+}
+
+
+#telegram_text{
+    margin-top:8px;
+    font-size:14px;
+    font-weight:bold;
+}
+
 .button-card {
     grid-column: 5;
     grid-row: 2;
