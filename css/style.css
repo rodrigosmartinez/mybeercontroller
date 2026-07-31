@@ -23,7 +23,7 @@ body {
 
 .cards {
     display: grid;
-    grid-template-columns: repeat(5, 150px);
+    grid-template-columns: repeat(6, 150px);
     justify-content: center;
     gap: 10px;
     margin-bottom: 80px;
