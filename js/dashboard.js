@@ -134,7 +134,7 @@ function atualizarCards(status) {
     const sd = document.getElementById("sd_card");
     const txt = document.getElementById("sd_card_text");
     
-    sd.checked = !!status.telegram;
+    sd.checked = !!status.sd_card;
     
     txt.innerHTML = sd.checked ? "ON" : "OFF";
     txt.style.color = sd.checked ? "#00ff66" : "#ff4444";
@@ -142,7 +142,7 @@ function atualizarCards(status) {
     const telegram = document.getElementById("telegram");
     const txt = document.getElementById("telegram_text");
     
-    telegram.checked = !!status.sd_card;
+    telegram.checked = !!status.telegram_enabled;
     
     txt.innerHTML = telegram.checked ? "ON" : "OFF";
     txt.style.color = telegram.checked ? "#00ff66" : "#ff4444";
@@ -368,5 +368,23 @@ function formatarTempo(ms) {
 window.onload = () => {
 
     iniciarFirebase();
+    
+    document.getElementById("sd_card").addEventListener("change", function () {
+    
+        const txt = document.getElementById("sd_card_text");
+    
+        txt.innerHTML = this.checked ? "ON" : "OFF";
+        txt.style.color = this.checked ? "#00ff66" : "#ff4444";
+    
+    });
 
+    document.getElementById("telegram").addEventListener("change", function () {
+    
+        const txt = document.getElementById("telegram_text");
+    
+        txt.innerHTML = this.checked ? "ON" : "OFF";
+        txt.style.color = this.checked ? "#00ff66" : "#ff4444";
+    
+    });
+    
 };
