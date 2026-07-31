@@ -87,14 +87,14 @@ function enviarParametros() {
     }
 
     // Telegram
-    const telegram = document.getElementById("sd_card").checked;
+    const telegram = document.getElementById("telegram").checked;
     
-    if (telegram !== Boolean(ultimoStatus.sd_card)) {
+    if (telegram !== Boolean(ultimoStatus.telegram)) {
     
-        dados.sd_card = telegram;
+        dados.telegram_enabled = telegram;
     
         alteracoes.push(
-            `• SD Card: ${ultimoStatus.sd_card ? "ON" : "OFF"} → ${telegram ? "ON" : "OFF"}`
+            `• Alerta Telegram: ${ultimoStatus.telegram ? "ON" : "OFF"} → ${telegram ? "ON" : "OFF"}`
         );
     
     }
