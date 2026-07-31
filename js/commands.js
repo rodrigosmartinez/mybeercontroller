@@ -58,9 +58,9 @@ function enviarParametros() {
 
     // Telegram
     const telegram = document.getElementById("telegram").checked;
-    if (telegram !== Boolean(ultimoStatus.telegram)) {
+    if (telegram !== Boolean(ultimoStatus.telegram_enabled)) {
         dados.telegram_enabled = telegram;
-        alteracoes.push(`• Alerta Telegram: ${ultimoStatus.telegram ? "ON" : "OFF"} → ${telegram ? "ON" : "OFF"}`);
+        alteracoes.push(`• Alerta Telegram: ${ultimoStatus.telegram_enabled ? "ON" : "OFF"} → ${telegram ? "ON" : "OFF"}`);
     }
 
 
